@@ -25,6 +25,20 @@ contract; the plan records progress, not a reduced scope.
   implementation plan. Keep the repository runnable at each checkpoint.
 - Preserve unrelated work. Do not change the system's default toolchains.
 
+## Strict color requirement
+
+- Use only the official **Lospec500** palette for every project-defined color in
+  every theme (including light/dark), component, editor/highlighter, chart starter,
+  illustration and UI state. Source: https://lospec.com/palette-list/lospec500.
+- Reuse shared semantic theme tokens. Do not introduce arbitrary hex/RGB/HSL
+  values, default Tailwind palettes, gradients, opacity blends, or third-party
+  theme colors outside Lospec500. Transparent surfaces, inheritance and
+  `currentColor` are permitted; antialiasing is not a new authored color.
+- Override third-party UI defaults and add RSpec palette/contrast regression
+  coverage when changing themes or components. Keep bundled charts on the same
+  theme tokens. Do not rewrite the owner's imported assets or notebook source
+  merely to recolor existing content.
+
 ## Optional C/C++ toolchains
 
 Prefer the repository's requested compiler. Only opt into these for an explicit
