@@ -12,6 +12,10 @@ contract; the plan records progress, not a reduced scope.
   `verify_partial_doubles` and `verify_doubled_constant_names` enabled. Load the
   real class before doubling it. Do not use `allow_any_instance_of` or
   `expect_any_instance_of`. Prefer plain Ruby objects with injected boundaries.
+- Use FactoryBot for reusable test data. Keep factories small and valid by
+  default; use explicit traits for meaningful variants. Prefer `build` or
+  `attributes_for` for unit tests; use `create` when persistence is under test.
+  Avoid hidden database writes and large implicit association graphs.
 - Run the relevant tests before committing. Keep unit tests independent of
   Rails, PostgreSQL, and GoAWS where possible; use real services to verify their
   contracts. Never describe mocks as integration evidence.

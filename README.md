@@ -17,7 +17,7 @@ BUNDLE_PATH=vendor/bundle bundle install
 bin/test spec/unit
 ```
 
-Tests use RSpec with verifying doubles. Unit tests require no database, broker,
+Tests use RSpec with verifying doubles and FactoryBot. Unit tests require no database, broker,
 or Rails boot. SimpleCov writes line/branch coverage to `coverage/`.
 
 There is not yet a runnable appliance. Build/run commands will be added with the

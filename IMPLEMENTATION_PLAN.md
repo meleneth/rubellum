@@ -46,3 +46,5 @@ an incomplete checkpoint complete.
   required fields, duplicate keys, size/depth bounds, and mutation protection.
   Line coverage 100%; branch coverage 92.86% for these two classes. This does not
   prove transport, durability, execution, or application acceptance behavior.
+- 2026-09-28: added FactoryBot for reusable data and factory/trait linting using
+  the build strategy; `bin/test spec/unit`: 67 examples, 0 failures.

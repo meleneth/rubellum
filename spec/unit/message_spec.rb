@@ -1,23 +1,9 @@
 # frozen_string_literal: true
 
 require "rubellum/message"
-require "securerandom"
 
 RSpec.describe Rubellum::Message do
-  let(:attributes) do
-    {
-      "schema_version" => 1,
-      "message_id" => SecureRandom.uuid,
-      "kind" => "execute",
-      "app_installation_id" => SecureRandom.uuid,
-      "notebook_id" => SecureRandom.uuid,
-      "session_id" => SecureRandom.uuid,
-      "generation" => 1,
-      "execution_id" => SecureRandom.uuid,
-      "sequence" => 1,
-      "payload" => { "source" => +"puts 'hello'" }
-    }
-  end
+  let(:attributes) { attributes_for(:runner_message).transform_keys(&:to_s) }
 
   it "round trips the versioned envelope without changing identities or payload" do
     message = described_class.new(attributes)
@@ -26,7 +12,7 @@ RSpec.describe Rubellum::Message do
   end
 
   it "distinguishes commands from committed event facts" do
-    message = described_class.new(attributes.merge("kind" => "execution_started"))
+    message = build(:runner_message, :started)
     expect(message.command?).to be(false)
   end
 

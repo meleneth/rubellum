@@ -10,5 +10,6 @@ gem "aws-sdk-sqs", "1.119.0"
 group :development, :test do
   gem "rspec", "3.13.2"
   gem "rspec-rails", "8.0.4"
+  gem "factory_bot", "6.5.6"
   gem "simplecov", "0.22.0", require: false
 end
