@@ -90,6 +90,11 @@ Bindings currently use configuration JSON; a dedicated input picker is still
 needed. Missing bindings and missing successful outputs produce cell-local
 errors. A Data cell can also be selected by `cell_id`, without an `output` name.
 
+Use **Import Markdown or data** below the notebook to import UTF-8 Markdown,
+JSON, or CSV (up to 1 MiB). Original bytes are retained as immutable assets; import
+does not execute code. **Export source** downloads the selected cell revision,
+including when viewing history.
+
 ### Editing and execution semantics
 
 - **Drafts are not revisions.** Edits autosave separately with tab-local recovery.
@@ -114,7 +119,7 @@ errors. A Data cell can also be selected by `cell_id`, without an `output` name.
 
 | Type | Current behavior |
 | --- | --- |
-| Markdown | Source editing, sanitized preview, GFM-style tables and highlighted fenced code |
+| Markdown | Source editing, sanitized preview, local images, highlighted code, file import/export |
 | Ruby | Persistent notebook context, stdout/stderr, return values, named JSON outputs, errors and interrupt |
 | Data | JSON or CSV source, parsing configuration, validation and preview |
 | Parameters | Versioned text/number/boolean/select/slider definitions; separate current values |
@@ -214,7 +219,7 @@ requests blocked; a fully network-disabled appliance journey remains to be run.
 ## Remaining work and references
 
 Still unfinished: portable app packages/import/export/duplicate,
-individual Markdown import/export and split preview, custom
+Markdown split preview, custom
 gem preparation, coordinated backup/restore, richer
 diffs and editor controls, complete journal retention/pressure handling, and the
 remaining lifecycle/renderer/offline acceptance cases. No import/export or backup

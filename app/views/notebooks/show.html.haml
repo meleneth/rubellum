@@ -43,3 +43,13 @@
         = form.label :cell_type, "Add a cell"
         = form.select :cell_type, CellRevision::TYPES.map { |type| [type.capitalize, type] }
         = form.submit "+ Add cell", class: "quiet-button"
+      %details.edit-control.mt-5
+        %summary Import Markdown or data
+        = form_with url: import_file_app_notebook_cells_path(@app, @notebook), multipart: true, class: "panel stack mt-3" do |form|
+          = form.hidden_field :expected_revision, value: @notebook.head_revision_id
+          = form.label :file, "Source file"
+          = form.file_field :file, required: true
+          = form.label :format, "Import format"
+          = form.select :format, [["Markdown", "markdown"], ["JSON data", "json"], ["CSV data", "csv"]]
+          %p.muted.text-xs UTF-8, up to 1 MiB. The original file is retained as an immutable asset. Import never executes code.
+          = form.submit "Import as new cell", class: "quiet-button"

@@ -4,6 +4,22 @@ Cell source, type, title, and configuration belong to immutable revisions.
 Editing creates a recoverable draft; explicit Save revision commits it. History
 restore copies historical content into a new revision and preserves provenance.
 
+## Files and images
+
+The app's **Files and images** page uploads immutable assets (25 MiB per file,
+512 MiB shared app quota). A replacement upload has a new asset identity; old
+references keep the old bytes. Markdown uses `![Alt text](asset://ASSET-UUID)`
+or `[Download](asset://ASSET-UUID)`. References must belong to the current app;
+both model validation and SQL triggers enforce this. Only raster images are
+served inline; other files are sandboxed attachments with nosniff headers.
+
+**Import Markdown or data** accepts UTF-8 `.md`, JSON, and CSV source up to 1 MiB.
+The chosen format is explicit, data is validated before installation, and the
+original upload is retained in the revision's `configuration.asset_ids` list.
+CSV imports record delimiter/header/blank-line choices. Imports never evaluate
+Ruby or JavaScript. **Export source** downloads the exact selected revision;
+table cells export their configuration. Markdown split preview remains unfinished.
+
 ## Data and parameters
 
 Data cells default to JSON. CSV configuration is explicit:

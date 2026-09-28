@@ -12,7 +12,9 @@ Rails.application.routes.draw do
         post :run_all
       end
       resources :cells, only: [:create, :update, :destroy] do
+        post :import_file, on: :collection
         member do
+          get :export
           post :run
           post :move
           post :restore

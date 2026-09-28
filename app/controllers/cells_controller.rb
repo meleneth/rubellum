@@ -1,6 +1,28 @@
 class CellsController < ApplicationController
   before_action :load_notebook
-  before_action :load_cell, except: :create
+  before_action :load_cell, except: [:create, :import_file]
+
+  def import_file
+    file = params.require(:file)
+    raise ArgumentError, "Choose a file to import" unless file.respond_to?(:tempfile)
+    CellFiles.import(notebook: @notebook, io: file.tempfile, filename: file.original_filename,
+      format: params.require(:format), expected_revision: params.require(:expected_revision))
+    redirect_to app_notebook_path(@app, @notebook), status: :see_other
+  end
+
+  def export
+    revision = params[:revision] ? @cell.revisions.find(params[:revision]) : @cell.head_revision
+    extension = case revision.cell_type
+    when "markdown" then "md"
+    when "ruby" then "rb"
+    when "d3" then "js"
+    when "data" then revision.configuration.fetch("format", "json") == "csv" ? "csv" : "json"
+    else "json"
+    end
+    source = revision.cell_type == "table" ? JSON.pretty_generate(revision.configuration) : revision.source
+    filename = "#{revision.title.parameterize.presence || revision.cell_type}.#{extension}"
+    send_data source, filename:, type: "text/plain; charset=utf-8", disposition: "attachment"
+  end
 
   def create
     type = params.require(:cell_type)

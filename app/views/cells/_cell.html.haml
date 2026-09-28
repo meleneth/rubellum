@@ -4,6 +4,7 @@
       %span.cell-number= format("%02d", index + 1)
       %span.eyebrow= revision.cell_type
       %strong= revision.title
+    = link_to "Export source", export_app_notebook_cell_path(@app, @notebook, revision.cell_id, revision: revision.id), class: "quiet-button edit-control"
     - unless historical
       .flex.gap-2.edit-control
         = link_to "History", history_app_notebook_cell_path(@app, @notebook, revision.cell_id), class: "quiet-button"
