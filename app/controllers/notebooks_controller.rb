@@ -14,6 +14,12 @@ class NotebooksController < ApplicationController
     @session = NotebookSession.find_by(notebook: @notebook)
   end
 
+  def update
+    History.new(@notebook).update_notebook(title: params.require(:title), description: params.fetch(:description, ""),
+      expected_notebook_revision: params.require(:expected_revision), summary: params.fetch(:summary, "Update notebook metadata"))
+    redirect_to app_notebook_path(@app, @notebook), status: :see_other
+  end
+
   def history
     @revisions = @notebook.revisions.order(created_at: :desc)
   end

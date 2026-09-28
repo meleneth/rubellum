@@ -2,8 +2,10 @@
   = link_to "← Notebook", app_notebook_path(@app, @notebook), class: "quiet-button"
   %h1 Notebook history
   - @revisions.each do |revision|
-    %article.panel.my-4
+    %article.panel.my-4{id: "notebook-revision-#{revision.id}"}
       %h2= revision.summary.presence || "Created notebook"
+      %h3= revision.title
+      %p= revision.description
       %p.muted= "#{revision.created_at} · #{revision.author} · #{revision.entries.size} cells"
       %ol.my-3
         - revision.ordered_revisions.each do |cell_revision|

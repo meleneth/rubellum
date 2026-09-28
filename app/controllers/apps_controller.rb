@@ -13,14 +13,26 @@ class AppsController < ApplicationController
 
   def update
     app = App.find(params[:id])
-    app.with_lock do
-      raise History::Conflict, "App metadata changed" unless app.head_revision_id == params[:expected_revision]
-      current = app.head_revision
-      revision = app.revisions.create!(parent_id: current.id, title: params.fetch(:title, current.title),
-        description: params.fetch(:description, current.description), configuration: current.configuration,
-        landing_notebook_id: params.fetch(:landing_notebook_id, current.landing_notebook_id), summary: "Update app metadata")
-      app.update!(head_revision: revision, archived_at: params[:archived] == "true" ? Time.current : nil)
+    archived = nil
+    if params.key?(:archived)
+      raise ArgumentError, "Invalid archive state" unless %w[true false].include?(params[:archived])
+      archived = params[:archived] == "true"
     end
+    AppHistory.new(app).update(expected_revision: params.require(:expected_revision),
+      attributes: params.permit(:title, :description, :landing_notebook_id).to_h, archived:,
+      summary: params.fetch(:summary, "Update app metadata"))
     redirect_to root_path, status: :see_other
+  end
+
+  def history
+    @app = App.find(params[:id])
+    @revisions = @app.revisions.order(created_at: :desc, id: :desc)
+    @selected = params[:revision] ? @app.revisions.find(params[:revision]) : @app.head_revision
+  end
+
+  def restore
+    app = App.find(params[:id])
+    AppHistory.new(app).restore(revision_id: params.require(:revision_id), expected_revision: params.require(:expected_revision))
+    redirect_to history_app_path(app), status: :see_other
   end
 end

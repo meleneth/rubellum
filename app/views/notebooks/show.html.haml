@@ -11,7 +11,7 @@
     %nav.stack{aria: {label: "Notebook navigation"}}
       - @app.notebooks.includes(:head_revision).each do |notebook|
         = link_to notebook.title, app_notebook_path(@app, notebook), class: "nav-link #{'active' if notebook == @notebook}"
-    = form_with url: app_notebooks_path(@app), class: "stack mt-6" do |form|
+    = form_with url: app_notebooks_path(@app), namespace: "new-notebook", class: "stack mt-6" do |form|
       = form.label :title, "New notebook"
       = form.text_field :title, required: true, placeholder: "Notebook title"
       = form.submit "+ Add notebook", class: "quiet-button"
@@ -31,6 +31,18 @@
         = link_to "History", history_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
         %button.quiet-button{type: "button", data: {action: "presentation#toggle"}} Presentation
         = render "notebooks/status", notebook: @notebook
+      - unless @historical
+        %details.edit-control.mt-4
+          %summary Notebook settings
+          = form_with url: app_notebook_path(@app, @notebook), namespace: "notebook-#{@notebook.id}", method: :patch, class: "panel stack mt-3" do |form|
+            = form.hidden_field :expected_revision, value: @notebook.head_revision_id
+            = form.label :title, "Notebook title"
+            = form.text_field :title, value: @revision.title, required: true
+            = form.label :description, "Notebook description"
+            = form.text_area :description, value: @revision.description
+            = form.label :summary, "Notebook edit summary"
+            = form.text_field :summary, placeholder: "What changed?"
+            = form.submit "Save notebook revision", class: "quiet-button"
       - if @historical
         %p.notice
           = "Historical preview · #{@revision.created_at} ·"

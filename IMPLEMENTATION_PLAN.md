@@ -40,8 +40,9 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
-1. Close history/authoring gaps: notebook metadata restore, app metadata history
-   controls, richer comparisons and editing affordances.
+1. Close remaining history/authoring gaps: richer source/structure comparisons,
+   Markdown split preview and editing affordances. Metadata editing/restore now
+   works through the public app and notebook history controls.
 2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
    descendant cleanup tests, durable control reconciliation, complete journal
    pressure handling, and explicit Restart-and-run-all.
@@ -51,6 +52,13 @@ an incomplete checkpoint complete.
    remaining public-path fixture journeys. ARM64 remains unverified.
 
 ## Latest verification
+
+- `npm run build` and metadata regression suite: 34 examples, 0 failures (seed
+  9463). Includes history/app-history model specs, app-history/notebook-metadata
+  request specs, and both new Chrome metadata-history journeys. App metadata
+  comparison/restore and versioned notebook settings are public Haml controls.
+  Browser testing exposed duplicate library input IDs; forms now have unique
+  namespaces with request coverage for label associations.
 
 - `bin/test spec/models/app_history_spec.rb`: 6 examples, 0 failures. App metadata
   updates/restores append immutable revisions, preserve archive state unless

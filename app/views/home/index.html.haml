@@ -3,7 +3,7 @@
   %h1 Your Ruby notebooks
   %p.muted.mb-8 Notes, live code, and small tools. Each app is a project of its own.
   %p.mb-6= link_to "Import an app package", import_apps_path, class: "quiet-button"
-  = form_with url: apps_path, class: "panel flex gap-3 items-end mb-8" do |form|
+  = form_with url: apps_path, namespace: "new-app", class: "panel flex gap-3 items-end mb-8" do |form|
     .grow
       = form.label :title, "New app name"
       = form.text_field :title, required: true, placeholder: "A new exploration"
@@ -19,7 +19,7 @@
           %span.muted= "· Created #{app.created_at.strftime('%b %-d')}"
         %details.edit-control.mt-4
           %summary App settings
-          = form_with url: app_path(app), method: :patch, class: "grid gap-3 mt-3" do |form|
+          = form_with url: app_path(app), namespace: "app-#{app.id}", method: :patch, class: "grid gap-3 mt-3" do |form|
             = form.hidden_field :expected_revision, value: app.head_revision_id
             = form.label :title, "App title"
             = form.text_field :title, value: app.title, required: true
@@ -31,6 +31,7 @@
             = form.select :archived, [["Active", "false"], ["Archived", "true"]], selected: app.archived_at ? "true" : "false"
             = form.submit "Save app revision", class: "quiet-button"
           .flex.flex-wrap.gap-3.mt-4
+            = link_to "App history", history_app_path(app), class: "quiet-button"
             = link_to "Export full history", export_app_path(app), class: "quiet-button", data: {turbo: false}
             = link_to "Export current state only", export_app_path(app, mode: "current"), class: "quiet-button", data: {turbo: false}
             = button_to "Duplicate app", duplicate_app_path(app), class: "quiet-button"

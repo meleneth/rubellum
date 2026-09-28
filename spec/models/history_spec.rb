@@ -96,6 +96,21 @@ RSpec.describe History, type: :model do
     expect { history.remove_cell(cell_id: cell.id, expected_notebook_revision: original) }.to raise_error(History::Conflict)
   end
 
+  it "versions notebook metadata while preserving selected cell revisions and rejecting stale edits" do
+    cell = add("retained")
+    original = notebook.head_revision
+    changed = history.update_notebook(title: "Renamed", description: "Notes", expected_notebook_revision: original.id, summary: "Clarify title")
+    expect(changed.parent_id).to eq(original.id)
+    expect(changed.entries).to eq(original.entries)
+    expect(changed.summary).to eq("Clarify title")
+    expect(notebook.reload.title).to eq("Renamed")
+    expect(cell.revisions.count).to eq(1)
+    expect { history.update_notebook(title: "Stale", description: "", expected_notebook_revision: original.id) }.to raise_error(History::Conflict)
+    expect { history.update_notebook(title: "", description: "", expected_notebook_revision: changed.id) }.to raise_error(ActiveRecord::RecordInvalid)
+    expect(notebook.reload.head_revision_id).to eq(changed.id)
+    expect(original.reload.title).not_to eq("Renamed")
+  end
+
   it "restores notebook metadata as well as cells without rewinding either history" do
     cell = add("first")
     original = notebook.revisions.create!(parent_id: notebook.head_revision_id,

@@ -93,6 +93,17 @@ class History
     end
   end
 
+  def update_notebook(title:, description:, expected_notebook_revision:, summary: "Update notebook metadata")
+    @notebook.with_lock do
+      check_document!(expected_notebook_revision)
+      previous = @notebook.head_revision
+      revision = @notebook.revisions.create!(parent_id: previous.id, title:, description:,
+        configuration: previous.configuration, entries: previous.entries, summary:)
+      @notebook.update!(head_revision: revision)
+      revision
+    end
+  end
+
   private
 
   def check_document!(expected)

@@ -136,6 +136,10 @@ including when viewing history.
   Every Ruby execution snapshots its parameter and dataset inputs.
 - **History** provides old source, structural snapshots, comparison, and restore
   as a new revision. Removed cells remain available in retained history.
+  **Notebook settings** versions title/description; notebook restore includes
+  historical metadata and cells. **App history** in the library compares and
+  restores app title, description, landing notebook and configuration without
+  altering notebook contents, live sessions or archive state.
 
 ### Cell types
 

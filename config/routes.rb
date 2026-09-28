@@ -5,10 +5,12 @@ Rails.application.routes.draw do
   get "/apps/import", to: "app_packages#new", as: :import_apps
   post "/apps/import", to: "app_packages#create"
   resources :apps, only: [:create, :show, :update] do
+    get :history, on: :member
+    post :restore, on: :member
     get :export, on: :member, to: "app_packages#export"
     post :duplicate, on: :member, to: "app_packages#duplicate"
     resources :assets, only: [:index, :create, :show]
-    resources :notebooks, only: [:create, :show] do
+    resources :notebooks, only: [:create, :show, :update] do
       member do
         get :history
         post :restore

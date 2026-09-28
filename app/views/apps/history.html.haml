@@ -1,0 +1,33 @@
+%section.library
+  = link_to "← App library", root_path, class: "quiet-button"
+  %h1 App history
+  %p.muted= @app.title
+  %p.muted.my-4 Restoring app metadata does not change notebook contents, running sessions, or archive state. Later revisions remain in history.
+  %article.panel.my-6
+    %h2 Selected revision compared with current
+    %p.muted= "#{@selected.created_at} · #{@selected.author} · #{@selected.summary.presence || 'Created app'}"
+    %table.w-full.my-4
+      %thead
+        %tr
+          %th Field
+          %th Selected revision
+          %th Current revision
+      %tbody
+        - AppHistory::FIELDS.each do |field|
+          - selected_value = @selected.public_send(field)
+          - current_value = @app.head_revision.public_send(field)
+          %tr{data: {changed: (selected_value != current_value).to_s}}
+            %th{scope: "row"}= field.humanize
+            %td
+              %pre= selected_value.is_a?(Hash) ? JSON.pretty_generate(selected_value) : selected_value.presence || "—"
+            %td
+              %pre= current_value.is_a?(Hash) ? JSON.pretty_generate(current_value) : current_value.presence || "—"
+    - if @selected.id != @app.head_revision_id
+      = button_to "Restore selected metadata as new revision", restore_app_path(@app), params: {revision_id: @selected.id, expected_revision: @app.head_revision_id}, class: "primary-button"
+  - @revisions.each do |revision|
+    %article.panel.my-3
+      %h2= revision.title
+      %p.muted= "#{revision.created_at} · #{revision.author} · #{revision.summary.presence || 'Created app'}"
+      - if revision.provenance["restored_from"]
+        %p.muted= "Restored from revision #{revision.provenance['restored_from']}"
+      = link_to "Compare with current", history_app_path(@app, revision: revision.id), class: "quiet-button mt-3"
