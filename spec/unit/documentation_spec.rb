@@ -23,6 +23,14 @@ RSpec.describe "Documented examples" do
     paths.each { |path| expect(root.join(path)).to exist, "Missing README link target: #{path}" }
   end
 
+  it "maps every quick-start container to explicit persistent /data storage" do
+    commands = readme.scan(/docker run .*?(?=\n```)/m)
+    expect(commands.size).to eq(2)
+    expect(commands.first).to include("-v rubellum-data:/data")
+    expect(commands.last).to include('--mount type=bind,source="$(pwd)/rubellum-data",target=/data')
+    expect(readme).to include("Always mount persistent storage at `/data`", "A persistent mount is not a backup.")
+  end
+
   it "accepts the documented parameter definitions and typed defaults" do
     examples = root.join("docs/cells.md").read.scan(/```json\n(.*?)```/m).flatten.map { |source| JSON.parse(source) }
     definitions = examples.find { |example| example.is_a?(Array) }

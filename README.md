@@ -29,6 +29,28 @@ docker run -d --name rubellum \
 Open **http://127.0.0.1:3001** once the container is healthy. Initial boot prepares
 the data volume and migrates PostgreSQL; it takes longer than subsequent starts.
 
+**Always mount persistent storage at `/data` inside the container.** The
+`-v rubellum-data:/data` line above maps a Docker-managed named volume to that
+directory. Reuse the same volume when replacing the container to keep your
+notebooks, revision history, assets, outputs, PostgreSQL, Redis, and configuration.
+
+If you prefer a visible host directory, use this alternative run command:
+
+```sh
+mkdir -p ./rubellum-data
+docker run -d --name rubellum \
+  --restart unless-stopped --stop-timeout 30 \
+  -p 127.0.0.1:3001:3000 \
+  --mount type=bind,source="$(pwd)/rubellum-data",target=/data \
+  rubellum:dev
+```
+
+Choose one of these storage options, not both. Use a dedicated host directory;
+the appliance manages its contents and permissions. Without an explicit `/data`
+mount, container replacement will not automatically reconnect your existing data.
+Do not delete/prune the named volume or delete the mapped host directory unless
+you intend to discard that instance. A persistent mount is not a backup.
+
 ```sh
 docker inspect --format '{{.State.Health.Status}}' rubellum
 docker logs --tail 100 rubellum
