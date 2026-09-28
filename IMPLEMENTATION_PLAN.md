@@ -52,6 +52,16 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Expanded appliance journey: `bin/test spec/appliance/boot_spec.rb`: 3 examples,
+  0 failures (seed 7072, 94 seconds). Browser-authored Ruby and artifact history
+  export through the real CLI, import into a second freshly initialized volume,
+  preserve file ownership, remain stopped until explicitly run, then execute in
+  a new context. Original persistence and fatal-service tests still pass.
+
+- `bin/test spec/unit/package_manifest_spec.rb spec/unit/documentation_spec.rb`:
+  14 examples, 0 failures. Strict integer schema versions, malformed owner shapes
+  and embedded NUL metadata are rejected before staging/database insertion.
+
 - Full regression after public package controls: `bin/test spec/unit spec/models
   spec/requests spec/integration spec/system`: 292 examples, 0 failures (seed
   17879), Ruby line coverage 94.24% / branch 77.75%. `npm run build` and rebuilt

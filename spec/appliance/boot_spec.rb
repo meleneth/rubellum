@@ -1,6 +1,7 @@
 require "open3"
 require "securerandom"
 require "timeout"
+require "tmpdir"
 require "capybara"
 require "capybara/cuprite"
 
@@ -30,6 +31,8 @@ RSpec.describe "Single-container appliance" do
   end
 
   def boot
+    @owned_containers |= [@name]
+    @owned_volumes |= [@volume]
     docker("run", "-d", "--name", @name, "-p", "127.0.0.1::3000", "-v", "#{@volume}:/data", ENV.fetch("RUBELLUM_IMAGE", "rubellum:dev"))
     await_ready
   end
@@ -42,12 +45,13 @@ RSpec.describe "Single-container appliance" do
     identity = SecureRandom.hex(6)
     @name = "rubellum-spec-#{identity}"
     @volume = "rubellum-spec-data-#{identity}"
+    @owned_containers, @owned_volumes = [], []
     boot
     example.run
   ensure
     # Only resources created by this example; never user's application volumes.
-    system("docker", "rm", "-f", @name, out: File::NULL, err: File::NULL) if @name
-    system("docker", "volume", "rm", @volume, out: File::NULL, err: File::NULL) if @volume
+    @owned_containers&.reverse_each { |name| system("docker", "rm", "-f", name, out: File::NULL, err: File::NULL) }
+    @owned_volumes&.reverse_each { |volume| system("docker", "volume", "rm", volume, out: File::NULL, err: File::NULL) }
   end
 
   it "boots all dependencies with one HTTP port and retains data across restart and replacement" do
@@ -102,6 +106,33 @@ RSpec.describe "Single-container appliance" do
     browser.click_button "▶ Run saved revision"
     expect(browser).to have_css(".return-value", text: "⇒ 1", wait: 20)
     expect(browser).to have_css(".output-meta", text: "generation 2")
+
+    # Exercise the documented package commands into a genuinely empty appliance.
+    app_id = URI(browser.current_url).path.split("/")[2]
+    docker("exec", "--user", "rubellum", @name, "bin/app-package", "export", app_id, "/data/backups/project.rubellum-app.tar.gz")
+    Dir.mktmpdir("rubellum-appliance-package-") do |directory|
+      archive = File.join(directory, "project.rubellum-app.tar.gz")
+      docker("cp", "#{@name}:/data/backups/project.rubellum-app.tar.gz", archive)
+      @name += "-import"
+      @volume += "-import"
+      boot
+      docker("cp", archive, "#{@name}:/data/backups/incoming.rubellum-app.tar.gz")
+      inside("chown", "rubellum:rubellum", "/data/backups/incoming.rubellum-app.tar.gz")
+      installed = docker("exec", "--user", "rubellum", @name, "bin/app-package", "import", "/data/backups/incoming.rubellum-app.tar.gz")
+      copied_id = installed.match(/Installed ([0-9a-f-]+)/)[1]
+      expect(copied_id).not_to eq(app_id)
+      port = JSON.parse(docker("inspect", @name)).first.dig("NetworkSettings", "Ports", "3000/tcp").first.fetch("HostPort")
+      browser.visit("http://127.0.0.1:#{port}/apps/#{copied_id}")
+      expect(browser).to have_content("Container execution")
+      expect(browser).to have_content("Session not started")
+      expect(browser).not_to have_css(".return-value")
+      browser.click_link "Files and images"
+      expect(browser).to have_content("run.txt")
+      expect(inside("stat", "-c", "%U", "/data/apps/#{copied_id}/blobs")).to eq("rubellum")
+      browser.visit("http://127.0.0.1:#{port}/apps/#{copied_id}")
+      browser.click_button "▶ Run saved revision"
+      expect(browser).to have_css(".return-value", text: "⇒ 1", wait: 20)
+    end
   ensure
     browser&.driver&.quit
   end
