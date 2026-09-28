@@ -52,6 +52,10 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- `bin/test spec/models/app_history_spec.rb`: 6 examples, 0 failures. App metadata
+  updates/restores append immutable revisions, preserve archive state unless
+  explicitly changed, and reject stale edits and cross-app landing/restore IDs.
+
 - Notebook restore regression reproduced metadata staying at the current head.
   Restore now appends historical title, description and configuration alongside
   restored cell revisions, retaining intervening history and restore provenance.
