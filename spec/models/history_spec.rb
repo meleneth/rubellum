@@ -96,6 +96,26 @@ RSpec.describe History, type: :model do
     expect { history.remove_cell(cell_id: cell.id, expected_notebook_revision: original) }.to raise_error(History::Conflict)
   end
 
+  it "restores notebook metadata as well as cells without rewinding either history" do
+    cell = add("first")
+    original = notebook.revisions.create!(parent_id: notebook.head_revision_id,
+      title: "Original title", description: "Original description", configuration: { "layout" => "wide" },
+      entries: notebook.head_revision.entries)
+    notebook.update!(head_revision: original)
+    later = notebook.revisions.create!(parent_id: original.id, title: "New title", description: "New description",
+      configuration: { "layout" => "compact" }, entries: original.entries)
+    notebook.update!(head_revision: later)
+
+    restored = history.restore_notebook(revision_id: original.id, expected_notebook_revision: later.id)
+    expect(restored.attributes.slice("title", "description", "configuration"))
+      .to eq(original.attributes.slice("title", "description", "configuration"))
+    expect(restored.parent_id).to eq(later.id)
+    expect(restored.id).not_to eq(original.id)
+    expect(restored.provenance).to eq("restored_from" => original.id)
+    expect(cell.reload.head_revision.provenance).to include("notebook_revision" => original.id)
+    expect(later.reload.title).to eq("New title")
+  end
+
   it "rejects missing or duplicated reorder identities" do
     a, b = add, add
     expect { history.reorder(cell_ids: [a.id, a.id], expected_notebook_revision: notebook.head_revision_id) }.to raise_error(ArgumentError)

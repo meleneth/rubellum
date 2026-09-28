@@ -40,24 +40,33 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
-1. Portable archive schema and bounded validation, followed by inert app
-   import/export/copy with immutable history and asset identity preservation.
+1. Close history/authoring gaps: notebook metadata restore, app metadata history
+   controls, richer comparisons and editing affordances.
 2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
    descendant cleanup tests, durable control reconciliation, complete journal
    pressure handling, and explicit Restart-and-run-all.
-3. Finish authoring affordances and renderer lifecycle coverage; portable archive
-   schema, inert validated import/export/copy, and explicit dependency preparation.
+3. Finish renderer lifecycle coverage and explicit dependency preparation. Portable
+   app import/export/copy now works through the UI and CLI.
 4. Coordinated backup/restore into a fresh volume, full offline acceptance, and
    remaining public-path fixture journeys. ARM64 remains unverified.
 
 ## Latest verification
+
+- Notebook restore regression reproduced metadata staying at the current head.
+  Restore now appends historical title, description and configuration alongside
+  restored cell revisions, retaining intervening history and restore provenance.
+  `bin/test spec/models/history_spec.rb spec/models/app_package_import_spec.rb
+  spec/models/app_package_export_spec.rb spec/requests/authoring_spec.rb`:
+  38 examples, 0 failures (seed 18695).
 
 - Release candidate source `393e3a15e1d2`: final non-appliance regression is
   294 examples, 0 failures (seed 6668), Ruby line coverage 94.26% / branch 77.94%.
   Built linux/amd64 image `b5a9229abe3b` with local tags
   `registry.deva.station/meleneth/rubellum:latest` and
   `registry.deva.station/meleneth/rubellum:393e3a15e1d2` (also `rubellum:dev`).
-  Both registry-formatted tags resolve to the same inspected image. Not pushed.
+  Both tags were subsequently pushed at the owner's request; the registry returned
+  `sha256:d2a32aa4a8ffc35a7bbda848658f31219d22dbbfb64dd24d23de1ad66d80fd53`
+  for each successful push.
 
 - Expanded appliance journey: `bin/test spec/appliance/boot_spec.rb`: 3 examples,
   0 failures (seed 7072, 94 seconds). Browser-authored Ruby and artifact history

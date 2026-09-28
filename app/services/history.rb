@@ -88,7 +88,7 @@ class History
         cell.update!(head_revision: revision)
         { "cell_id" => cell.id, "revision_id" => revision.id }
       end
-      append_document(entries:, summary: "Restore notebook structure",
+      append_document(entries:, metadata: historical, summary: "Restore notebook revision",
         provenance: { "restored_from" => historical.id })
     end
   end
@@ -99,10 +99,10 @@ class History
     raise Conflict, "Notebook structure changed; reload before trying again" unless @notebook.head_revision_id == expected
   end
 
-  def append_document(entries:, summary:, provenance: {})
+  def append_document(entries:, summary:, provenance: {}, metadata: @notebook.head_revision)
     previous = @notebook.head_revision
-    revision = @notebook.revisions.create!(parent_id: previous.id, title: previous.title,
-      description: previous.description, configuration: previous.configuration, entries:, summary:, provenance:)
+    revision = @notebook.revisions.create!(parent_id: previous.id, title: metadata.title,
+      description: metadata.description, configuration: metadata.configuration, entries:, summary:, provenance:)
     @notebook.update!(head_revision: revision)
     revision
   end
