@@ -1,0 +1,31 @@
+%section.library
+  %p.eyebrow A place to think in Ruby
+  %h1 Your Ruby notebooks
+  %p.muted.mb-8 Notes, live code, and small tools. Each app is a project of its own.
+  = form_with url: apps_path, class: "panel flex gap-3 items-end mb-8" do |form|
+    .grow
+      = form.label :title, "New app name"
+      = form.text_field :title, required: true, placeholder: "A new exploration"
+    = form.submit "Create app", class: "primary-button"
+  .grid.gap-5{class: "md:grid-cols-2 xl:grid-cols-3"}
+    - @apps.each do |app|
+      %article.panel.app-card
+        %p.eyebrow= app.archived_at ? "Archived" : "Personal app"
+        %h2= link_to app.title, app_path(app)
+        %p.muted= app.head_revision.description.presence || "Ready for your next idea."
+        %p.mt-6.text-sm
+          = "#{app.notebooks.count} notebooks"
+          %span.muted= "· Created #{app.created_at.strftime('%b %-d')}"
+        %details.edit-control.mt-4
+          %summary App settings
+          = form_with url: app_path(app), method: :patch, class: "grid gap-3 mt-3" do |form|
+            = form.hidden_field :expected_revision, value: app.head_revision_id
+            = form.label :title, "App title"
+            = form.text_field :title, value: app.title, required: true
+            = form.label :description, "Description"
+            = form.text_area :description, value: app.head_revision.description
+            = form.label :landing_notebook_id, "Landing notebook"
+            = form.select :landing_notebook_id, app.notebooks.map { |notebook| [notebook.title, notebook.id] }, selected: app.head_revision.landing_notebook_id
+            = form.label :archived, "Archive state"
+            = form.select :archived, [["Active", "false"], ["Archived", "true"]], selected: app.archived_at ? "true" : "false"
+            = form.submit "Save app revision", class: "quiet-button"

@@ -1,0 +1,30 @@
+.output{id: "cell-output-#{cell.id}", aria: {live: "polite"}}
+  - execution = cell_output(cell)
+  - if execution
+    .output-meta
+      %strong= execution.status.capitalize
+      %span= "Run #{execution.sequence} · generation #{execution.generation}"
+      %span= "Revision #{execution.cell_revision_id.first(8)}"
+      - if execution.cell_revision_id != cell.head_revision_id
+        %span.stale Stale source
+    - execution.events.each do |event|
+      - kind = event.envelope.fetch("kind")
+      - payload = event.envelope.fetch("payload")
+      - if %w[stdout stderr].include?(kind)
+        %pre.stream{class: ("error" if kind == "stderr")}= payload["text"]
+      - elsif kind == "structured_output"
+        %details
+          %summary= "Output: #{payload['name']}"
+          %pre= JSON.pretty_generate(payload["data"])
+      - elsif kind == "display"
+        %pre= payload["value"]
+      - elsif kind == "output_truncated"
+        %p.notice= "Output truncated after #{payload['limit_bytes']} bytes."
+    - if execution.result["inspection"]
+      %pre.return-value= "⇒ #{execution.result['inspection']}"
+    - if execution.result["message"]
+      %pre.error= "#{execution.result['error_class']} #{execution.result['message']}\n#{Array(execution.result['backtrace']).join("\n")}"
+    - unless execution.terminal?
+      = button_to "Interrupt", interrupt_app_notebook_execution_path(cell.notebook.app_id, cell.notebook_id, execution), class: "quiet-button edit-control"
+  - else
+    %p.muted.text-sm Not run yet. Ruby state persists between runs until you reset the session.

@@ -1,0 +1,18 @@
+%section.library
+  = link_to "← Notebook", app_notebook_path(@app, @notebook), class: "quiet-button"
+  %h1 Cell history
+  .grid.gap-4.my-6{class: "md:grid-cols-2"}
+    .panel
+      %h2 Selected revision
+      %p= "#{@selected.created_at} · #{@selected.cell_type}"
+      %pre= @selected.source
+    .panel
+      %h2 Current revision
+      %p= "#{@cell.head_revision.created_at} · #{@cell.head_revision.cell_type}"
+      %pre= @cell.head_revision.source
+  - @revisions.each do |revision|
+    %article.panel.my-3
+      %p= "#{revision.created_at} · #{revision.summary.presence || 'Saved revision'} · #{revision.author}"
+      .flex.gap-3.mt-3
+        = link_to "Compare with current", history_app_notebook_cell_path(@app, @notebook, @cell, revision: revision.id), class: "quiet-button"
+        = button_to "Restore as new revision", restore_app_notebook_cell_path(@app, @notebook, @cell), params: { revision_id: revision.id, expected_revision: @cell.head_revision_id }, class: "quiet-button"

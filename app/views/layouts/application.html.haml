@@ -1,0 +1,20 @@
+!!!
+%html{lang: "en"}
+  %head
+    %title Rubellum · Ruby notebooks
+    %meta{name: "viewport", content: "width=device-width,initial-scale=1"}
+    = csrf_meta_tags
+    = csp_meta_tag
+    = stylesheet_link_tag "application", "data-turbo-track": "reload"
+    = javascript_include_tag "application", defer: true, "data-turbo-track": "reload"
+  %body
+    %header.topbar
+      %a.brand{href: root_path}
+        %span.gem{aria: {hidden: true}} ◆
+        Rubellum
+        %span.muted / notebooks
+      .flex.gap-3.items-center
+        = link_to "App library", root_path, class: "quiet-button"
+        %button.quiet-button{type: "button", data: {controller: "theme", action: "theme#toggle"}, aria: {label: "Toggle light and dark theme"}} ◐ Theme
+    %main.shell
+      = yield

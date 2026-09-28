@@ -1,0 +1,85 @@
+%article.cell.panel{id: "cell-#{revision.cell_id}"}
+  .cell-heading
+    .flex.gap-3.items-center
+      %span.cell-number= format("%02d", index + 1)
+      %span.eyebrow= revision.cell_type
+      %strong= revision.title
+    - unless historical
+      .flex.gap-2.edit-control
+        = link_to "History", history_app_notebook_cell_path(@app, @notebook, revision.cell_id), class: "quiet-button"
+        - %w[up down].each do |direction|
+          = button_to(direction == "up" ? "↑" : "↓", move_app_notebook_cell_path(@app, @notebook, revision.cell_id), params: { direction:, expected_revision: @notebook.head_revision_id }, class: "quiet-button", aria: { label: "Move cell #{direction}" })
+        = button_to "Remove", app_notebook_cell_path(@app, @notebook, revision.cell_id), method: :delete, params: { expected_revision: @notebook.head_revision_id }, class: "quiet-button"
+  - unless historical
+    %details.edit-control.source-details{open: revision.cell_type == "ruby"}
+      %summary Edit source
+      = form_with url: app_notebook_cell_path(@app, @notebook, revision.cell_id), method: :patch, namespace: "cell-#{revision.cell_id}", data: { controller: "editor", editor_language_value: revision.cell_type, editor_draft_url_value: draft_app_notebook_cell_path(@app, @notebook, revision.cell_id), action: "submit->editor#prepare" }, class: "stack mt-3" do |form|
+        = form.hidden_field :expected_revision, value: revision.id
+        = form.hidden_field :editor_id, data: { editor_target: "identity" }
+        .grid.gap-3{class: "md:grid-cols-2"}
+          %div
+            = form.label :title, "Cell title"
+            = form.text_field :title, value: revision.title
+          %div
+            = form.label :cell_type, "Cell type"
+            = form.select :cell_type, CellRevision::TYPES, selected: revision.cell_type
+        = form.label :source, "Source"
+        = form.text_area :source, value: revision.source, rows: 8, data: { editor_target: "source" }, spellcheck: false
+        %div{data: {editor_target: "mount"}}
+        %details
+          %summary Configuration and input binding
+          %p.muted.text-xs.mt-2
+            Cell identity:
+            %code= revision.cell_id
+          = form.label :configuration, "Configuration (JSON)"
+          = form.text_area :configuration, value: JSON.pretty_generate(revision.configuration), rows: 3
+        = form.label :summary, "Revision summary (optional)"
+        = form.text_field :summary, placeholder: "What changed?"
+        .flex.flex-wrap.items-center.gap-3
+          %button.primary-button{name: "intent", value: "save"} Save revision
+          - if revision.cell_type == "ruby"
+            %button.quiet-button{name: "intent", value: "run"} Save & run
+          %span.muted.text-sm{data: {editor_target: "status"}, aria: {live: "polite"}} Saved revision
+          %button.quiet-button.hidden{type: "button", data: {editor_target: "recover", action: "editor#recover"}} Recover draft
+  .cell-content
+    - case revision.cell_type
+    - when "markdown"
+      .prose= markdown(revision.source)
+    - when "ruby"
+      - if historical
+        %pre
+          %code= revision.source
+      - else
+        = button_to "▶ Run saved revision", run_app_notebook_cell_path(@app, @notebook, revision.cell_id), params: { expected_revision: revision.id }, class: "quiet-button edit-control mb-3"
+        %div{data: {controller: "output", output_url_value: output_app_notebook_cell_path(@app, @notebook, revision.cell_id)}}
+          = render "cells/output", cell: revision.cell
+    - when "data"
+      - begin
+        %pre.data-preview= JSON.pretty_generate(Rubellum::DataCell.parse(revision.source, revision.configuration))
+      - rescue ArgumentError, JSON::ParserError => error
+        %p.notice= error.message
+    - when "parameters"
+      = render "cells/parameters", revision:, historical:
+    - when "table"
+      - if historical
+        %p.muted= "Historical renderer configuration: #{revision.configuration.to_json}"
+      - else
+        %div{data: {controller: "table", table_url_value: data_app_notebook_cell_path(@app, @notebook, revision.cell_id)}}
+          %label
+            Filter rows
+            %input{type: "search", data: {table_target: "filter", action: "input->table#filter"}}
+          %p.muted.text-xs{data: {table_target: "status"}, aria: {live: "polite"}}
+          .table-scroll{data: {table_target: "content"}}
+          .flex.gap-2.mt-3
+            %button.quiet-button{data: {action: "table#previous"}} Previous
+            %button.quiet-button{data: {action: "table#next"}} Next
+            %button.quiet-button{data: {action: "table#json"}} Export JSON
+            %button.quiet-button{data: {action: "table#csv"}} Export CSV
+    - when "d3"
+      - if historical
+        %pre= revision.source
+      - else
+        %div{data: {controller: "chart", chart_url_value: data_app_notebook_cell_path(@app, @notebook, revision.cell_id), chart_source_value: revision.source}}
+          %button.quiet-button.mb-3{data: {action: "chart#activate"}} Render chart
+          %span.muted.text-xs{data: {chart_target: "status"}, aria: {live: "polite"}} Render explicitly to run this JavaScript.
+          %iframe.chart-frame{data: {chart_target: "frame"}, title: revision.title.presence || "D3 visualization", sandbox: "allow-scripts"}

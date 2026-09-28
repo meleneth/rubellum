@@ -60,6 +60,17 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- Owner preferences are persisted in `AGENTS.md`: Haml templates, RSpec with
+  verifying doubles, FactoryBot, and small frequent commits. Haml Rails is pinned;
+  all application templates use Haml and generator defaults match.
+- `npm run build` passes for the local CodeMirror grammars, Turbo/Stimulus, D3
+  iframe bootstrap and Tailwind. `bin/test spec/unit spec/models spec/requests
+  spec/integration`: 199 examples, 0 failures. New coverage includes all six Haml
+  cell views, source escaping, app/cell scoping, draft conflicts, exact Save-and-run
+  revisions, inert historical renderers, and typed data/parameter validation.
+  Browser lifecycle, renderer cleanup, reconnect and offline acceptance are not
+  yet verified by these request tests.
+
 - `bin/test spec/integration/full_execution_spec.rb`: 1 example, 0 failures.
   Real PostgreSQL request/outbox → GoAWS → manager-owned agent and clean Ruby
   evaluator → GoAWS → PostgreSQL result, including durable event acknowledgment

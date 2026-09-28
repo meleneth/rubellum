@@ -1,0 +1,25 @@
+- begin
+  - parameters = Rubellum::Parameters.new(JSON.parse(revision.source))
+  - names = parameters.definitions.map { |definition| definition.fetch("name") }
+  - values = parameters.values((ParameterValue.find_by(cell_id: revision.cell_id)&.values || {}).slice(*names))
+  - if historical
+    %pre= revision.source
+  - else
+    = form_with url: parameters_app_notebook_cell_path(@app, @notebook, revision.cell_id), method: :patch, data: { controller: "parameters", action: "change->parameters#update submit->parameters#update" }, class: "parameter-grid" do |form|
+      - parameters.definitions.each do |definition|
+        - name = definition.fetch("name")
+        - id = "parameter-#{revision.cell_id}-#{name}"
+        %div
+          %label{for: id}= definition.fetch("label", name)
+          - case definition.fetch("type")
+          - when "boolean"
+            = select_tag "values[#{name}]", options_for_select([["Yes", "true"], ["No", "false"]], values[name].to_s), id:
+          - when "select"
+            = select_tag "values[#{name}]", options_for_select(definition.fetch("options"), values[name]), id:
+          - when "slider", "number"
+            = tag.input name: "values[#{name}]", id:, type: definition["type"] == "slider" ? "range" : "number", min: definition["min"], max: definition["max"], step: definition.fetch("step", "any"), value: values[name]
+          - else
+            = text_field_tag "values[#{name}]", values[name], id:
+      %p.muted.text-xs.col-span-full{data: {parameters_target: "status"}} Changes refresh renderers. Run Ruby explicitly to use new values.
+- rescue ArgumentError, JSON::ParserError => error
+  %p.notice= error.message

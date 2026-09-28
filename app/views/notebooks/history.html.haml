@@ -1,0 +1,13 @@
+%section.library
+  = link_to "← Notebook", app_notebook_path(@app, @notebook), class: "quiet-button"
+  %h1 Notebook history
+  - @revisions.each do |revision|
+    %article.panel.my-4
+      %h2= revision.summary.presence || "Created notebook"
+      %p.muted= "#{revision.created_at} · #{revision.author} · #{revision.entries.size} cells"
+      %ol.my-3
+        - revision.ordered_revisions.each do |cell_revision|
+          %li= "#{cell_revision.cell_type} · #{cell_revision.title.presence || cell_revision.cell_id.first(8)} · revision #{cell_revision.id.first(8)}"
+      .flex.gap-3
+        = link_to "Historical preview", app_notebook_path(@app, @notebook, revision: revision.id), class: "quiet-button"
+        = button_to "Restore as new revision", restore_app_notebook_path(@app, @notebook), params: { revision_id: revision.id, expected_revision: @notebook.head_revision_id }, class: "quiet-button"

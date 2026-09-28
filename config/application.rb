@@ -16,6 +16,7 @@ module Rubellum
     config.active_record.schema_format = :sql
     config.generators.test_framework :rspec
     config.generators.fixture_replacement :factory_bot
+    config.generators.template_engine :haml
     config.logger = ActiveSupport::Logger.new($stdout)
     config.hosts = ["localhost", "127.0.0.1", /.*\.localhost/]
   end

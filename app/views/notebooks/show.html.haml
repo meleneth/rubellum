@@ -1,0 +1,44 @@
+.workspace{data: {controller: "presentation"}}
+  %aside.sidebar.edit-control
+    %p.eyebrow Current app
+    %h2= @app.title
+    %details.mt-4
+      %summary Switch app
+      %nav.stack.mt-3
+        - App.active.includes(:head_revision).each do |app|
+          = link_to app.title, app_path(app), class: "nav-link"
+    %p.eyebrow.mt-8 Notebooks
+    %nav.stack{aria: {label: "Notebook navigation"}}
+      - @app.notebooks.includes(:head_revision).each do |notebook|
+        = link_to notebook.title, app_notebook_path(@app, notebook), class: "nav-link #{'active' if notebook == @notebook}"
+    = form_with url: app_notebooks_path(@app), class: "stack mt-6" do |form|
+      = form.label :title, "New notebook"
+      = form.text_field :title, required: true, placeholder: "Notebook title"
+      = form.submit "+ Add notebook", class: "quiet-button"
+    %p.muted.text-xs.mt-8 Your work stays on this appliance.
+  %section.document
+    = turbo_stream_from @notebook
+    .document-heading
+      %p.eyebrow= "#{@app.title} / Notebook"
+      %h1= @revision.title
+      %p.muted= @revision.description.presence || "An executable document, one idea at a time."
+      .flex.flex-wrap.gap-2.items-center.mt-5
+        - unless @historical
+          = button_to "Run all saved Ruby", run_all_app_notebook_path(@app, @notebook), class: "primary-button edit-control"
+          - if @session
+            = button_to "Reset session", reset_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
+        = link_to "History", history_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
+        %button.quiet-button{type: "button", data: {action: "presentation#toggle"}} Presentation
+        = render "notebooks/status", notebook: @notebook
+      - if @historical
+        %p.notice
+          = "Historical preview · #{@revision.created_at} ·"
+          = link_to "Return to current notebook", app_notebook_path(@app, @notebook)
+    - @cells.each_with_index do |revision, index|
+      = render "cells/cell", revision:, index:, historical: @historical
+    - unless @historical
+      = form_with url: app_notebook_cells_path(@app, @notebook), class: "add-cell edit-control" do |form|
+        = form.hidden_field :expected_revision, value: @notebook.head_revision_id
+        = form.label :cell_type, "Add a cell"
+        = form.select :cell_type, CellRevision::TYPES.map { |type| [type.capitalize, type] }
+        = form.submit "+ Add cell", class: "quiet-button"

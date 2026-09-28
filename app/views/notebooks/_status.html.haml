@@ -1,0 +1,1 @@
+%span.status{id: "notebook-status-#{notebook.id}"}= NotebookSession.find_by(notebook:)&.status || "Session not started"
