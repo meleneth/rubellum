@@ -60,6 +60,11 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- Evaluator and helper API implemented and tested with real subprocesses:
+  persistent variables/methods/requires, distinct contexts, separated stdout and
+  protocol, bounded output, strict JSON helpers, cell-local errors and unknown
+  abrupt exits. No application execution path is claimed yet.
+
 - Rails 8.1.4 boots on Ruby 4.0.6. Three request specs pass against temporary
   PostgreSQL 17.11 and GoAWS processes, including dependency-failure readiness.
   PostgreSQL test fixtures never use an existing host database. The host lacked

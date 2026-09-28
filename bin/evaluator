@@ -1,0 +1,20 @@
+#!/usr/bin/env ruby
+# This process deliberately does not load Rails, Bundler, database or SQS clients.
+require "json"
+require_relative "../lib/rubellum/ruby_evaluator"
+
+commands = IO.new(3, "r")
+events = IO.new(4, "w")
+events.sync = true
+$stdout.sync = true
+$stderr.sync = true
+evaluator = Rubellum::RubyEvaluator.new
+emit = ->(kind, payload) { events.puts(JSON.generate("kind" => kind, "payload" => payload)) }
+while (line = commands.gets(Rubellum::Message::MAX_BYTES + 1))
+  abort "evaluator command too large" if line.bytesize > Rubellum::Message::MAX_BYTES
+  request = JSON.parse(line)
+  result = evaluator.call(**request.transform_keys(&:to_sym), &emit)
+  $stdout.flush
+  $stderr.flush
+  events.puts(JSON.generate(result))
+end
