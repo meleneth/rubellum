@@ -52,6 +52,13 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Release candidate source `393e3a15e1d2`: final non-appliance regression is
+  294 examples, 0 failures (seed 6668), Ruby line coverage 94.26% / branch 77.94%.
+  Built linux/amd64 image `b5a9229abe3b` with local tags
+  `registry.deva.station/meleneth/rubellum:latest` and
+  `registry.deva.station/meleneth/rubellum:393e3a15e1d2` (also `rubellum:dev`).
+  Both registry-formatted tags resolve to the same inspected image. Not pushed.
+
 - Expanded appliance journey: `bin/test spec/appliance/boot_spec.rb`: 3 examples,
   0 failures (seed 7072, 94 seconds). Browser-authored Ruby and artifact history
   export through the real CLI, import into a second freshly initialized volume,
