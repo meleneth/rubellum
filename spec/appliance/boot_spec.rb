@@ -87,13 +87,16 @@ RSpec.describe "Single-container appliance" do
     browser.click_button "+ Add cell"
     editor = browser.find(".cm-content")
     editor.click
-    editor.send_keys([:control, "a"], 'counter = (counter || 0) + 1; puts "container stream"; counter')
+    editor.send_keys([:control, "a"], 'counter = (counter || 0) + 1; puts "container stream"; File.write("run.txt", counter.to_s); Notebook.asset("run.txt"); counter')
     browser.click_button "Save & run"
     expect(browser).to have_css(".return-value", text: "⇒ 1", wait: 20), -> { "#{browser.text}\n#{docker('logs', @name).lines.last(80).join}" }
     expect(browser).to have_css(".stream", text: "container stream")
+    original_artifact_path = URI(browser.find(".artifact a", text: "run.txt")["href"]).path
+    expect(inside("curl", "-fsS", "http://127.0.0.1:3000#{original_artifact_path}")).to eq("1")
     expect(browser).to have_css("turbo-cable-stream-source[connected]")
     browser.click_button "▶ Run saved revision"
     expect(browser).to have_css(".return-value", text: "⇒ 2", wait: 20)
+    expect(inside("curl", "-fsS", "http://127.0.0.1:3000#{original_artifact_path}")).to eq("1")
     browser.click_button "Reset session"
     expect(browser).to have_css(".status", text: "ready · generation 2", wait: 20)
     browser.click_button "▶ Run saved revision"

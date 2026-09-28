@@ -1,6 +1,7 @@
 require "rails_helper"
 require "capybara/rspec"
 require "capybara/cuprite"
+require "base64"
 
 Capybara.register_driver(:rubellum_chrome) do |application|
   Capybara::Cuprite::Driver.new(application, window_size: [1400, 1000], timeout: 10,
@@ -88,5 +89,33 @@ RSpec.describe "Authoring in Chrome", type: :system do
     editor.send_keys([:control, "z"])
     expect(page).to have_css(".cm-content", text: "21 * 2")
     expect(cell.reload.head_revision.source).to eq("21 * 2")
+  end
+
+  it "uploads an image and imports Markdown referring to its immutable app asset" do
+    visit app_notebook_path(notebook.app, notebook)
+    click_link "Files and images"
+    Tempfile.create(["plot", ".png"]) do |file|
+      file.binmode
+      file.write(Base64.decode64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jWZkAAAAASUVORK5CYII="))
+      file.flush
+      attach_file "File or image", file.path
+      click_button "Upload immutable asset"
+      expect(page).to have_css("article pre", text: "asset://")
+    end
+    reference = find("article pre").text
+    click_link "← App"
+    find("summary", text: "Import Markdown or data").click
+    Tempfile.create(["notes", ".md"]) do |file|
+      file.write("# Imported picture\n\n#{reference}\n")
+      file.flush
+      attach_file "Source file", file.path
+      click_button "Import as new cell"
+      expect(page).to have_css(".prose h1", text: "Imported picture")
+      expect(page).to have_css(".prose img")
+    end
+    image = find(".prose img")
+    expect(image["src"]).to include("/apps/#{notebook.app_id}/assets/")
+    expect(page).to have_link("Export source")
+    expect(Execution.count).to eq(0)
   end
 end

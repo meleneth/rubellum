@@ -40,8 +40,8 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
-1. Immutable asset/payload storage and the real artifact helper; large command
-   payload references, digest validation, history-safe retention and size limits.
+1. Portable archive schema and bounded validation, followed by inert app
+   import/export/copy with immutable history and asset identity preservation.
 2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
    descendant cleanup tests, durable control reconciliation, complete journal
    pressure handling, and explicit Restart-and-run-all.
@@ -51,6 +51,13 @@ an incomplete checkpoint complete.
    remaining public-path fixture journeys. ARM64 remains unverified.
 
 ## Latest verification
+
+- Asset milestone regression: `bin/test spec/unit spec/models spec/requests
+  spec/integration spec/system`: 256 examples, 0 failures (seed 22487), including
+  Chrome image upload and Markdown import. Ruby line coverage 92.68%, branch
+  coverage 75.43%. Rebuilt AMD64 image; `bin/test spec/appliance/boot_spec.rb`:
+  3 examples, 0 failures (seed 20916). Browser-generated artifacts retain their
+  original bytes after a later execution replaces the workspace file.
 
 - Corrected a documentation-link check to recognize `asset://` examples and a
   real GoAWS fixture bind race. `bin/test spec/unit/documentation_spec.rb
