@@ -5,7 +5,9 @@ ENV["RAILS_ENV"] = "test"
 # Never connect tests to a user's existing database.
 raise "Unset DATABASE_URL for isolated PostgreSQL tests" if ENV["DATABASE_URL"]
 postgres = PostgresProcess.new
-at_exit { postgres.close }
+asset_root = Dir.mktmpdir("rubellum-test-data-")
+ENV["RUBELLUM_DATA"] = asset_root
+at_exit { postgres.close; FileUtils.remove_entry(asset_root) }
 postgres.start
 ENV["PGHOST"] = postgres.directory
 ENV["PGUSER"] = "rubellum"

@@ -16,6 +16,7 @@
       = form.text_field :title, required: true, placeholder: "Notebook title"
       = form.submit "+ Add notebook", class: "quiet-button"
     %p.muted.text-xs.mt-8 Your work stays on this appliance.
+    = link_to "Files and images", app_assets_path(@app), class: "nav-link mt-3"
   %section.document
     = turbo_stream_from @notebook
     .document-heading

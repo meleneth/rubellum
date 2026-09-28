@@ -9,7 +9,12 @@ module ApplicationHelper
     end
   end
 
-  def markdown(source)
+  def markdown(source, app: nil)
+    if app
+      ids = source.scan(%r{asset://([0-9a-f-]{36})}).flatten
+      available = app.assets.where(id: ids).pluck(:id)
+      source = source.gsub(%r{asset://([0-9a-f-]{36})}) { |reference| available.include?(Regexp.last_match(1)) ? app_asset_path(app, Regexp.last_match(1)) : reference }
+    end
     renderer = MarkdownRenderer.new(filter_html: true, safe_links_only: true)
     html = Redcarpet::Markdown.new(renderer, tables: true, fenced_code_blocks: true, autolink: true, strikethrough: true).render(source)
     sanitize(html, tags: %w[h1 h2 h3 h4 h5 h6 p br hr ul ol li blockquote pre code span a img table thead tbody tr th td strong em del],

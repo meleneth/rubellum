@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   get "/up", to: "health#show"
   mount ActionCable.server => "/cable"
   resources :apps, only: [:create, :show, :update] do
+    resources :assets, only: [:index, :create, :show]
     resources :notebooks, only: [:create, :show] do
       member do
         get :history

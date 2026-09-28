@@ -44,7 +44,7 @@
   .cell-content
     - case revision.cell_type
     - when "markdown"
-      .prose= markdown(revision.source)
+      .prose= markdown(revision.source, app: @app)
     - when "ruby"
       - if historical
         %pre

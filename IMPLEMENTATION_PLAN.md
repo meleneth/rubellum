@@ -52,6 +52,14 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- App uploads and immutable Markdown asset references: `bin/test
+  spec/models/assets_spec.rb spec/requests/assets_spec.rb spec/models/history_spec.rb
+  spec/requests/authoring_spec.rb`: 35 examples, 0 failures. Database triggers
+  prevent asset mutation/deletion and cross-app revision references. Uploads
+  version the app asset list; same-name replacements retain both identities.
+  Downloads validate bytes; only raster images render inline, with nosniff and
+  sandbox response headers. Active content remains an attachment.
+
 - Immutable blob-store foundation: `bin/test spec/unit/blob_store_spec.rb`:
   10 examples, 0 failures. SHA-256 addresses, fsynced atomic publication,
   deduplication without overwrite, corruption/size validation, app namespaces,

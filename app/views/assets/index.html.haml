@@ -1,0 +1,20 @@
+%section.library
+  = link_to "← App", app_path(@app), class: "quiet-button"
+  %h1= "#{@app.title} · Assets"
+  %p.muted.mb-5 Uploads are immutable. Uploading the same filename again creates a new identity; old notebook references keep their original bytes. Limit: 25 MiB per file, 512 MiB per app. Retained files are never automatically evicted.
+  = form_with url: app_assets_path(@app), multipart: true, class: "panel stack mb-6" do |form|
+    = form.hidden_field :expected_revision, value: @app.head_revision_id
+    = form.label :file, "File or image"
+    = form.file_field :file, required: true
+    = form.submit "Upload immutable asset", class: "primary-button"
+  - @assets.each do |asset|
+    %article.panel.my-4
+      %h2= link_to asset.filename, app_asset_path(@app, asset)
+      %p.muted= "#{asset.mime_type} · #{number_to_human_size(asset.byte_size)} · #{asset.created_at}"
+      - if asset.execution_id
+        %p.muted= "Produced by execution #{asset.execution_id}"
+      %p.mt-3 Markdown reference
+      %pre= asset.image? ? "![Image](asset://#{asset.id})" : "[#{asset.filename}](asset://#{asset.id})"
+      %details
+        %summary Content digest
+        %code= asset.sha256

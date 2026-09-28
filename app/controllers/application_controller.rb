@@ -2,6 +2,7 @@ class ApplicationController < ActionController::Base
   protect_from_forgery with: :exception
   rescue_from History::Conflict, with: :conflict
   rescue_from ActiveRecord::RecordInvalid, ArgumentError, JSON::ParserError, Rubellum::Message::Invalid, with: :invalid_input
+  rescue_from Rubellum::BlobStore::Invalid, Rubellum::BlobStore::Full, with: :invalid_input
 
   private
 
