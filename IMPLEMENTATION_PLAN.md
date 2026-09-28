@@ -52,6 +52,12 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- `bin/test spec/unit/package_archive_spec.rb`: 9 examples, 0 failures. The
+  inert tar/gzip container layer rejects traversal, links/devices/extensions,
+  duplicate/conflicting paths, corrupt checksums, truncation and concatenated
+  streams. Limits: 64 MiB compressed, 256 MiB expanded, 32 MiB per entry and
+  10,000 entries. This is archive validation, not yet app import/export.
+
 - Asset milestone regression: `bin/test spec/unit spec/models spec/requests
   spec/integration spec/system`: 256 examples, 0 failures (seed 22487), including
   Chrome image upload and Markdown import. Ruby line coverage 92.68%, branch
