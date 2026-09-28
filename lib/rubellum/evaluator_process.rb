@@ -27,24 +27,27 @@ module Rubellum
       [commands_read, events_write, stdout_write, stderr_write].compact.each(&:close)
     end
 
-    def execute(source:, cell_id:, inputs: {}, datasets: {})
+    def execute(source:, cell_id:, inputs: {}, datasets: {}, tick: -> {})
       request = JSON.generate({ source:, cell_id:, inputs:, datasets: }) + "\n"
       raise ArgumentError, "evaluator command too large" if request.bytesize > Message::MAX_BYTES
       @commands.write(request)
       recorded = 0
       truncated = false
+      decoders = %w[stdout stderr].to_h { |kind| [kind, Encoding::Converter.new("UTF-8", "UTF-16LE", invalid: :replace, undef: :replace)] }
       emit_stream = lambda do |kind, bytes|
         remaining = [OUTPUT_LIMIT - recorded, 0].max
         kept = bytes.byteslice(0, remaining)
         recorded += kept.bytesize
-        yield(kind, { "text" => kept.force_encoding(Encoding::UTF_8).scrub }) unless kept.empty?
+        text = decoders.fetch(kind).convert(kept).encode("UTF-8")
+        yield(kind, { "text" => text }) unless text.empty?
         if bytes.bytesize > remaining && !truncated
           yield("output_truncated", { "limit_bytes" => OUTPUT_LIMIT })
           truncated = true
         end
       end
       loop do
-        ready = IO.select(@streams.keys)&.first || []
+        tick.call
+        ready = IO.select(@streams.keys, nil, nil, 0.1)&.first || []
         ready.each do |io|
           chunk = io.read_nonblock(CHUNK_BYTES, exception: false)
           next if chunk == :wait_readable
@@ -63,6 +66,10 @@ module Rubellum
                 while (bytes = stream.read_nonblock(CHUNK_BYTES, exception: false)).is_a?(String)
                   emit_stream.call(@streams.fetch(stream), bytes)
                 end
+              end
+              decoders.each do |stream_kind, decoder|
+                tail = decoder.finish.encode("UTF-8")
+                yield(stream_kind, { "text" => tail }) unless tail.empty?
               end
               yield(kind, payload)
               return frame

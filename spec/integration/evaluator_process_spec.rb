@@ -39,6 +39,13 @@ RSpec.describe Rubellum::EvaluatorProcess do
     expect(events.last.last["inspection"]).to eq("42")
   end
 
+  it "preserves Unicode characters split across stdout pipe chunks" do
+    text = "λ🙂" * 9000
+    events = execute("STDOUT.write(#{text.inspect}); nil")
+    actual = events.select { |kind, _| kind == "stdout" }.map { |_, payload| payload.fetch("text") }.join
+    expect(actual).to eq(text)
+  end
+
   it "marks abrupt process loss unknown rather than rerunning source" do
     expect { execute("exit! 9") }.to raise_error(described_class::Lost, /unknown/)
   end

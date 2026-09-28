@@ -9,11 +9,11 @@ module Rubellum
 
     MAX_BYTES = 64 * 1024
     UUID = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
-    COMMANDS = %w[execute interrupt restart stop acknowledge].freeze
-    EVENTS = %w[runner_ready execution_accepted execution_started stdout stderr
-                structured_output artifact execution_completed execution_failed
+    COMMANDS = %w[start execute interrupt restart stop acknowledge].freeze
+    EVENTS = %w[runner_ready runner_stopped execution_accepted execution_started stdout stderr
+                structured_output display output_truncated artifact execution_completed execution_failed
                 execution_interrupted execution_cancelled execution_unknown heartbeat].freeze
-    EXECUTION_KINDS = (EVENTS - %w[runner_ready heartbeat] + %w[execute interrupt]).freeze
+    EXECUTION_KINDS = (EVENTS - %w[runner_ready runner_stopped heartbeat] + %w[execute interrupt]).freeze
     REQUIRED = %w[schema_version message_id kind app_installation_id notebook_id
                   session_id generation sequence payload].freeze
     OPTIONAL = %w[execution_id command_id].freeze
