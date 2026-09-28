@@ -55,6 +55,8 @@ module Rubellum
         raise ProtocolError, "conflicting command sequence" unless previous.fetch("envelope") == message.to_h
         return
       end
+      interrupt = @journal.state.fetch("interrupts", {})[sequence]
+      raise ProtocolError, "conflicting interrupt execution identity" if interrupt && interrupt != message["execution_id"]
       payload = ExecutionPayload.unpack(message["payload"], store: @payload_store)
       unless payload["source"].is_a?(String) && Message::UUID.match?(payload["cell_id"].to_s) &&
           Message::UUID.match?(payload["cell_revision_id"].to_s) &&
@@ -113,13 +115,31 @@ module Rubellum
               state["events"].reject! { |event| event.fetch("sequence") <= state.fetch("acknowledged") }
             end
           when "interrupt"
-            if @active_execution == message["execution_id"] && !@interrupt_deadline
-              @evaluator.interrupt
-              @interrupt_deadline = @clock.call + 2
-            end
+            record_interrupt(message)
           end
         end
         @transport.delete(@control_queue, delivery)
+      end
+    end
+
+    def record_interrupt(message)
+      sequence = message["sequence"].to_s
+      execution_id = message["execution_id"]
+      command = @journal.state.fetch("commands")[sequence]
+      if command && command.fetch("envelope")["execution_id"] != execution_id
+        raise ProtocolError, "conflicting interrupt execution identity"
+      end
+      return if command && !%w[accepted started].include?(command["state"])
+      previous = @journal.state.fetch("interrupts", {})[sequence]
+      raise ProtocolError, "conflicting interrupt execution identity" if previous && previous != execution_id
+      unless previous
+        @journal.update(terminal: true) do |state|
+          (state["interrupts"] ||= {})[sequence] = execution_id
+        end
+      end
+      if @active_execution == execution_id && !@interrupt_deadline
+        @evaluator.interrupt
+        @interrupt_deadline = @clock.call + 2
       end
     end
 
@@ -146,11 +166,14 @@ module Rubellum
         command.dig("envelope", "payload", "batch_id") == batch_id &&
           %w[execution_failed execution_interrupted execution_unknown execution_cancelled].include?(command["state"])
       end
-      if failed
+      interrupted = @journal.state.fetch("interrupts", {})[sequence] == @active_execution
+      if failed || interrupted
         @journal.update(terminal: true) do |state|
           state.fetch("commands").fetch(sequence)["state"] = "execution_cancelled"
           state["next_command"] += 1
-          append_event(state, "execution_cancelled", { "message" => "Run all stopped after an earlier cell did not complete successfully", "batch_id" => batch_id }, @active_execution, envelope.fetch("message_id"))
+          state.fetch("interrupts", {}).delete(sequence)
+          reason = interrupted ? "Interrupted before execution started" : "Run all stopped after an earlier cell did not complete successfully"
+          append_event(state, "execution_cancelled", { "message" => reason, "batch_id" => batch_id }, @active_execution, envelope.fetch("message_id"))
         end
         publish_latest
         return
@@ -169,6 +192,7 @@ module Rubellum
           if terminal
             state.fetch("commands").fetch(sequence)["state"] = kind
             state["next_command"] += 1
+            state.fetch("interrupts", {}).delete(sequence)
           end
         end
         publish_latest
@@ -178,6 +202,7 @@ module Rubellum
         append_event(state, "execution_cancelled", { "message" => "Execution payload unavailable before evaluation: #{error.message}" }, @active_execution, envelope.fetch("message_id"))
         state.fetch("commands").fetch(sequence)["state"] = "execution_cancelled"
         state["next_command"] += 1
+        state.fetch("interrupts", {}).delete(sequence)
       end
     rescue EvaluatorProcess::Lost, RuntimeJournal::Full => error
       @stopped = true
@@ -186,6 +211,7 @@ module Rubellum
         append_event(state, "execution_unknown", { "message" => error.message }, @active_execution, envelope.fetch("message_id"))
         state.fetch("commands").fetch(sequence)["state"] = "execution_unknown"
         state["next_command"] += 1
+        state.fetch("interrupts", {}).delete(sequence)
       end
     ensure
       @active_execution = @interrupt_deadline = nil

@@ -53,6 +53,14 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Queued interrupt cancellation: `bin/test spec/unit/session_agent_spec.rb
+  spec/integration/session_agent_spec.rb spec/integration/interrupt_recovery_spec.rb
+  spec/models/execution_transport_spec.rb`: 33 examples, 0 failures (seed 44719).
+  The agent journals interrupt intent before deleting its notification, rejects
+  conflicting execution identities, and cancels a later-arriving command without
+  invoking Ruby. Real broker restart preserves this behavior; event assertions
+  use protocol sequence rather than assuming SQS arrival order.
+
 - Interrupt delivery regression: `bin/test spec/models/execution_transport_spec.rb
   spec/integration/interrupt_recovery_spec.rb`: 13 examples, 0 failures (seed
   50237). SendMessage no longer confirms interruption. A deterministic real

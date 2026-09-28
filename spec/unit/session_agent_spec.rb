@@ -71,6 +71,68 @@ RSpec.describe Rubellum::SessionAgent do
     expect { agent.accept(message) }.to raise_error(described_class::ProtocolError)
   end
 
+  context "with interrupt controls" do
+    let(:control_queue) { Rubellum::QueueNames.session(scope["session_id"], scope["generation"], control: true) }
+
+    before do
+      allow(transport).to receive(:ensure_queue) { |name| name }
+      allow(transport).to receive(:receive).and_return([])
+      allow(transport).to receive(:publish)
+      allow(transport).to receive(:delete)
+    end
+
+    def deliver_interrupt(execution_id: command["execution_id"], sequence: command["sequence"], generation: scope["generation"])
+      message = build(:runner_message, **scope.symbolize_keys, kind: "interrupt", execution_id:, sequence:, generation:, payload: {})
+      delivery = Rubellum::SqsTransport::Delivery.new(message:, receipt_handle: "control-receipt")
+      allow(transport).to receive(:receive).with(control_queue, wait_seconds: 0).and_return([delivery], [])
+      delivery
+    end
+
+    it "durably records early cancellation before deleting control delivery and never evaluates its source" do
+      delivery = deliver_interrupt
+      expect(transport).to receive(:delete).with(control_queue, delivery) do
+        expect(@journal.state.fetch("interrupts").fetch("1")).to eq(command["execution_id"])
+      end
+      expect(evaluator).not_to receive(:execute)
+      agent.step
+      deliver_interrupt
+      agent.step
+      expect(@journal.state.fetch("interrupts")).to eq("1" => command["execution_id"])
+      agent.accept(command)
+      agent.step
+      expect(@journal.state.fetch("commands").fetch("1")["state"]).to eq("execution_cancelled")
+      expect(@journal.state.fetch("next_command")).to eq(2)
+      expect(@journal.state.fetch("events").map { |event| event["kind"] }).not_to include("execution_started")
+      expect(@journal.state.fetch("interrupts")).to be_empty
+    end
+
+    it "rejects an interrupt whose execution identity conflicts with an accepted sequence" do
+      agent.accept(command)
+      deliver_interrupt(execution_id: SecureRandom.uuid)
+      expect { agent.step }.to raise_error(described_class::ProtocolError, /interrupt/)
+      expect(@journal.state.fetch("commands").fetch("1")["state"]).to eq("accepted")
+    end
+
+    it "does not let an early interrupt cancel a different execution later claiming its sequence" do
+      deliver_interrupt
+      agent.step
+      different = build(:runner_message, **scope.symbolize_keys, payload:)
+      expect { agent.accept(different) }.to raise_error(described_class::ProtocolError, /interrupt/)
+      expect(@journal.state.fetch("commands")).to be_empty
+    end
+
+    it "ignores old-generation and already-terminal interrupts" do
+      deliver_interrupt(generation: scope["generation"] + 1)
+      expect(evaluator).to receive(:execute).once.and_yield("execution_completed", { "inspection" => "42" })
+      agent.accept(command)
+      agent.step
+      deliver_interrupt
+      agent.step
+      expect(@journal.state.fetch("commands").fetch("1")["state"]).to eq("execution_completed")
+      expect(@journal.state.fetch("interrupts", {})).to be_empty
+    end
+  end
+
   context "with referenced command payloads" do
     let(:payload_store) { instance_double(Rubellum::BlobStore) }
     let(:reference) { { "sha256" => "a" * 64, "size" => JSON.generate(payload).bytesize } }

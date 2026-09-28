@@ -137,6 +137,9 @@ Switching modes preserves the editor and undo history.
 - **Interrupt** uses a separate SQS control path. Unresponsive code is forcibly
   terminated after a grace period; an uncertain outcome is recorded honestly,
   never automatically retried. **Reset session** starts a fresh generation.
+  Interrupt requests survive broker restart until a terminal result is committed.
+  An interrupt received before evaluation cancels the cell without running it;
+  clicking Interrupt can still race with code that has already started.
 - **Parameters** refresh active browser renderers but never silently run Ruby.
   Every Ruby execution snapshots its parameter and dataset inputs.
 - **History** provides old source, structural snapshots, comparison, and restore

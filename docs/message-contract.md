@@ -70,6 +70,12 @@ PostgreSQL outbox, bounded fsynced runner journals, and contiguous acknowledgmen
 Interrupt requests remain outstanding across sends and broker restart until a
 contiguous terminal execution fact or generation-stopped fact is committed.
 Requests against an already terminal execution do not enqueue new controls.
+The agent journals interrupt intent by command sequence/execution identity before
+deleting control delivery. An intent received before execute acceptance survives
+broker restart and cancels that command before `execution_started` or evaluation.
+Duplicate controls are harmless; conflicting identities are protocol errors and
+old generations are fenced. Intent records are removed with the terminal journal
+fact. Interrupting a Run all cell also stops the rest of its batch.
 Complete disk-pressure/retention and lifecycle reconciliation remain unfinished.
 
 Use `config/goaws.yml`. Keep GoAWS's `Region` empty: a nonempty value is prefixed

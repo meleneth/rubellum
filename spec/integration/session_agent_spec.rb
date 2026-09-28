@@ -107,6 +107,28 @@ RSpec.describe "Real SQS Ruby execution" do
     expect(@journal.state.fetch("commands").size).to eq(1)
   end
 
+  it "retains an early interrupt across broker restart and cancels before Ruby can have side effects" do
+    request = command("cancelled_value = 99")
+    control = @transport.ensure_queue(Rubellum::QueueNames.session(@scope["session_id"], 1, control: true))
+    interrupt = build(:runner_message, **@scope.symbolize_keys, kind: "interrupt", execution_id: request["execution_id"], payload: {})
+    @transport.publish(control, interrupt)
+    @agent.step
+    expect(@journal.state.fetch("interrupts").fetch("1")).to eq(request["execution_id"])
+    @broker.stop
+    @broker.start
+    @agent.step
+    @queue = @transport.ensure_queue(Rubellum::QueueNames.session(@scope["session_id"], 1))
+    @transport.publish(@queue, request)
+    @agent.step
+    @transport.publish(@queue, command("defined?(cancelled_value)", sequence: 2))
+    @agent.step
+    results = events
+    cancelled = results.select { |event| event.to_h["execution_id"] == request["execution_id"] }
+    expect(cancelled.sort_by { |event| event["sequence"] }.map { |event| event["kind"] }).to eq(%w[execution_accepted execution_cancelled])
+    expect(results.find { |event| event["kind"] == "execution_completed" }["payload"]["inspection"]).to eq("nil")
+    expect(@journal.state.fetch("interrupts")).to be_empty
+  end
+
   it "interrupts through the separate SQS control queue while Ruby is running" do
     request = command('puts "ready"; sleep 100')
     @transport.publish(@queue, request)
