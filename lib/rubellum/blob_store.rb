@@ -13,6 +13,7 @@ module Rubellum
     APP_LIMIT = 512 * 1024 * 1024
     DIGEST = /\A[0-9a-f]{64}\z/
     CHUNK_BYTES = 64 * 1024
+    attr_reader :directory
 
     def self.for_app(root:, app_id:)
       raise Invalid, "invalid app identity" unless Message::UUID.match?(app_id.to_s)

@@ -18,6 +18,14 @@
           %pre= JSON.pretty_generate(payload["data"])
       - elsif kind == "display"
         %pre= payload["value"]
+      - elsif kind == "artifact"
+        - artifact = Asset.find_by(runner_event_id: event.id)
+        - if artifact
+          .artifact.my-3
+            = link_to artifact.filename, app_asset_path(artifact.app_id, artifact)
+            %span.muted= " · #{number_to_human_size(artifact.byte_size)} · SHA-256 #{artifact.sha256.first(12)}"
+            - if artifact.image?
+              = image_tag app_asset_path(artifact.app_id, artifact), alt: artifact.filename, class: "max-w-full mt-2"
       - elsif kind == "output_truncated"
         %p.notice= "Output truncated after #{payload['limit_bytes']} bytes."
     - if execution.result["inspection"]

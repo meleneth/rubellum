@@ -7,11 +7,16 @@ module Rubellum
     MAX_OUTPUT_BYTES = 16 * 1024
     attr_reader :inputs
 
+    def initialize(artifact_writer: nil)
+      @artifact_writer = artifact_writer
+    end
+
     def configure(inputs:, datasets:, &emit)
       raise ArgumentError, "inputs and datasets must be objects" unless inputs.is_a?(Hash) && datasets.is_a?(Hash)
       @inputs = JsonValue.copy(inputs)
       @datasets = JsonValue.copy(datasets)
       @emit = emit
+      @artifact_writer&.reset
     end
 
     def dataset(name)
@@ -31,6 +36,13 @@ module Rubellum
       raise ArgumentError, "display exceeds #{MAX_OUTPUT_BYTES} bytes" if value.bytesize > MAX_OUTPUT_BYTES
       @emit.call("display", { "mime" => mime, "value" => JsonValue.copy(value) })
       nil
+    end
+
+    def asset(path, mime: nil)
+      raise ArgumentError, "Artifact storage is not configured for this evaluator" unless @artifact_writer
+      reference = @artifact_writer.call(path, mime:)
+      @emit.call("artifact", reference)
+      reference
     end
   end
 end

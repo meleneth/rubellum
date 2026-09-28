@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require_relative "../config/boot"
 require_relative "../lib/rubellum/session_agent"
+require_relative "../lib/rubellum/blob_store"
 
 scope = JSON.parse(ARGV.fetch(0))
 root = ARGV.fetch(1)
@@ -8,7 +9,8 @@ directory = File.join(root, "runtime/sessions", scope.fetch("session_id"), scope
 workspace = File.join(root, "apps", scope.fetch("app_installation_id"), "workspaces", scope.fetch("notebook_id"))
 FileUtils.mkdir_p(workspace, mode: 0o700)
 journal = Rubellum::RuntimeJournal.new(directory:)
-evaluator = Rubellum::EvaluatorProcess.new(workspace:)
+blobs = Rubellum::BlobStore.for_app(root:, app_id: scope.fetch("app_installation_id"))
+evaluator = Rubellum::EvaluatorProcess.new(workspace:, blob_directory: blobs.directory)
 transport = Rubellum::SqsTransport.local(endpoint: ENV.fetch("SQS_ENDPOINT", "http://127.0.0.1:4100"))
 agent = Rubellum::SessionAgent.new(scope:, journal:, evaluator:, transport:)
 Signal.trap("TERM") { exit }

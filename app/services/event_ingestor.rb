@@ -50,6 +50,7 @@ class EventIngestor
       OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND (envelope ->> 'generation')::integer = ? AND envelope ->> 'kind' IN ('start', 'execute')", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)
     elsif (execution_id = envelope["execution_id"])
       execution = session.executions.find_by!(id: execution_id, generation: envelope.fetch("generation"))
+      AssetStorage.register_artifact(execution:, event: RunnerEvent.find(envelope.fetch("message_id"))) if kind == "artifact"
       status = { "execution_accepted" => "accepted", "execution_started" => "running", "execution_completed" => "completed",
         "execution_failed" => "failed", "execution_interrupted" => "interrupted", "execution_cancelled" => "cancelled", "execution_unknown" => "unknown" }[kind]
       if status && !execution.terminal?

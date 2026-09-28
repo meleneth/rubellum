@@ -19,13 +19,19 @@ Implemented helper methods:
 - `Notebook.emit(name, data:)`: strict JSON-compatible named output, at most
   16 KiB per inline output. Arbitrary Ruby objects and nonfinite numbers fail.
 - `Notebook.display(text, mime: "text/plain")`: bounded text display.
+- `Notebook.asset(path, mime: nil)`: copy a regular relative workspace file into
+  immutable app storage and emit a durable artifact reference. Returns a frozen
+  object with filename, declared/inferred MIME, and SHA-256/size blob reference.
+  Rails verifies bytes and determines the served MIME independently. Traversal,
+  absolute paths and symlinks are rejected. Limits: 25 MiB/file, 32 files and
+  100 MiB/execution; all app blobs share a 512 MiB quota. Rewriting a scratch
+  filename does not change existing artifacts. No retained content is evicted.
 
 The manager owns agents; an agent owns the clean evaluator and fsynced journal.
 Commands/results cross SQS in both directions. Interrupts have a two-second grace
 period before evaluator process-group termination. Lost state is not replayed.
 Run all batches stop after failure/interruption; later explicit runs are separate.
 
-Artifact persistence and custom app bundles are not yet implemented. There is no
-artifact helper pretending to persist files before that facility exists. The
-clean evaluator can use Ruby's available standard/default libraries; gems loaded
+Custom app bundles are not yet implemented. The clean evaluator can use Ruby's
+available standard/default libraries; gems loaded
 by Rails are not automatically available to notebook code.

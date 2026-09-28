@@ -52,6 +52,15 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- `bin/test spec/unit/artifact_writer_spec.rb spec/unit/notebook_api_spec.rb
+  spec/integration/evaluator_process_spec.rb spec/integration/full_execution_spec.rb
+  spec/models/artifacts_spec.rb`: 27 examples, 0 failures. `Notebook.asset` now
+  copies workspace files into durable blobs, returns metadata, and emits SQS
+  artifact events. Real managed execution verifies scratch replacement does not
+  alter artifact bytes and duplicate events do not duplicate metadata. SQL guards
+  enforce artifact ownership and event/content identity. Limits: 32 files and
+  100 MiB per execution, within the shared app storage quota.
+
 - App uploads and immutable Markdown asset references: `bin/test
   spec/models/assets_spec.rb spec/requests/assets_spec.rb spec/models/history_spec.rb
   spec/requests/authoring_spec.rb`: 35 examples, 0 failures. Database triggers

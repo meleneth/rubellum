@@ -10,14 +10,14 @@ module Rubellum
     CHUNK_BYTES = 4096
     attr_reader :pid
 
-    def initialize(workspace:)
+    def initialize(workspace:, blob_directory: nil)
       commands_read, @commands = IO.pipe
       @events, events_write = IO.pipe
       @stdout, stdout_write = IO.pipe
       @stderr, stderr_write = IO.pipe
       executable = File.expand_path("../../bin/evaluator", __dir__)
       @pid = Process.spawn({ "PATH" => "/usr/local/bin:/usr/bin:/bin", "LANG" => "C.UTF-8" },
-        RbConfig.ruby, executable, 3 => commands_read, 4 => events_write,
+        RbConfig.ruby, executable, *Array(blob_directory), 3 => commands_read, 4 => events_write,
         in: File::NULL, out: stdout_write, err: stderr_write,
         unsetenv_others: true, pgroup: true, chdir: workspace)
       @commands.sync = true

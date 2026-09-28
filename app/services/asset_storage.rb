@@ -24,4 +24,20 @@ class AssetStorage
     end
   end
 
+  def self.register_artifact(execution:, event:)
+    app = execution.notebook_session.notebook.app
+    payload = event.envelope.fetch("payload")
+    reference = payload.fetch("blob")
+    bytes = for_app(app).read(reference)
+    filename = payload.fetch("filename")
+    mime_type = Marcel::MimeType.for(StringIO.new(bytes), name: filename)
+    asset = Asset.create_or_find_by!(runner_event: event) do |record|
+      record.assign_attributes(app:, execution:, filename:, mime_type:,
+        sha256: reference.fetch("sha256"), byte_size: reference.fetch("size"))
+    end
+    unless asset.app_id == app.id && asset.execution_id == execution.id && asset.reference == reference
+      raise Rubellum::BlobStore::Invalid, "Artifact identity was reused"
+    end
+    asset
+  end
 end

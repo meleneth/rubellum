@@ -9,8 +9,8 @@ PostgreSQL, GoAWS, Redis, Rails, and notebook workers are bundled—no Compose,
 external AWS account, hosted service, runtime CDN, or Docker socket required.
 
 **Under active development.** The authoring and execution paths work, but the
-full product contract is not complete. App import/export, immutable uploaded
-assets, custom gem environments, and coordinated backup/restore are not ready.
+full product contract is not complete. App import/export, custom gem environments,
+and coordinated backup/restore are not ready.
 Use disposable development data until backup/restore is implemented and verified.
 
 ## Quick start
@@ -122,7 +122,9 @@ errors. A Data cell can also be selected by `cell_id`, without an `output` name.
 | D3 | Editable JavaScript in an explicitly activated iframe; structured data, inputs, sizing and theme |
 
 Built-in helpers are `Notebook.inputs`, `Notebook.dataset(name)`,
-`Notebook.emit(name, data:)`, and `Notebook.display(text, mime: "text/plain")`.
+`Notebook.emit(name, data:)`, `Notebook.display(text, mime: "text/plain")`, and
+`Notebook.asset("workspace-file.png")`. Upload immutable files through **Files and
+images**; reference them in Markdown with `![Image](asset://ASSET-UUID)`.
 See the [Ruby helper reference](docs/evaluator.md) and
 [cell/renderer reference](docs/cells.md) for contracts and limits.
 
@@ -211,8 +213,8 @@ requests blocked; a fully network-disabled appliance journey remains to be run.
 
 ## Remaining work and references
 
-Still unfinished: portable app packages/import/export/duplicate, immutable file
-assets and artifacts, individual Markdown import/export and split preview, custom
+Still unfinished: portable app packages/import/export/duplicate,
+individual Markdown import/export and split preview, custom
 gem preparation, large payload references, coordinated backup/restore, richer
 diffs and editor controls, complete journal retention/pressure handling, and the
 remaining lifecycle/renderer/offline acceptance cases. No import/export or backup

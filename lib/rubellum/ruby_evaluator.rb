@@ -6,8 +6,8 @@ module Rubellum
   class RubyEvaluator
     MAX_INSPECT_BYTES = 16 * 1024
 
-    def initialize
-      @api = NotebookApi.new
+    def initialize(artifact_writer: nil)
+      @api = NotebookApi.new(artifact_writer:)
       context = Class.new
       context.const_set(:Notebook, @api)
       context.class_eval("def context_binding; binding; end", __FILE__, __LINE__)
