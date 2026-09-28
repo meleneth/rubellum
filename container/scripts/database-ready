@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+attempt=0
+until s6-setuidgid postgres pg_isready -q -h /run/postgresql; do
+  attempt=$((attempt + 1))
+  [ "$attempt" -lt 100 ] || { echo 'PostgreSQL failed readiness' >&2; exit 1; }
+  sleep 0.1
+done
+if ! s6-setuidgid postgres psql -h /run/postgresql -tAc "SELECT 1 FROM pg_roles WHERE rolname='rubellum'" | grep -q 1; then
+  s6-setuidgid postgres createuser -h /run/postgresql rubellum
+fi
+if ! s6-setuidgid postgres psql -h /run/postgresql -tAc "SELECT 1 FROM pg_database WHERE datname='rubellum'" | grep -q 1; then
+  s6-setuidgid postgres createdb -h /run/postgresql -O rubellum rubellum
+fi

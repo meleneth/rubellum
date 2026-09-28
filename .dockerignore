@@ -1,0 +1,11 @@
+.git
+.agents
+.codex
+.bundle
+vendor/bundle
+tmp
+log
+coverage
+data
+node_modules
+.env

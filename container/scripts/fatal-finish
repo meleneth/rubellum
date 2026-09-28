@@ -1,0 +1,7 @@
+#!/bin/sh
+# s6 sets wanted-up false during an intentional shutdown.
+if [ "$(s6-svstat -o wantedup .)" = true ]; then
+  echo "Critical service exited unexpectedly; stopping appliance" >&2
+  printf '1\n' > /run/s6-linux-init-container-results/exitcode
+  /run/s6/basedir/bin/halt
+fi

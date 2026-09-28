@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+attempt=0
+until redis-cli -h 127.0.0.1 ping | grep -q PONG; do
+  attempt=$((attempt + 1))
+  [ "$attempt" -lt 100 ] || { echo 'Redis failed readiness' >&2; exit 1; }
+  sleep 0.1
+done

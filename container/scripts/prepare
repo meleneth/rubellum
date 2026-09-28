@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+cd /app
+ruby -Ilib -rrubellum/data_directory -e 'Rubellum::DataDirectory.new(root: "/data").prepare'
+chown postgres:postgres /data/postgres
+chown redis:redis /data/redis
+chown -R rubellum:rubellum /data/config
+chown rubellum:rubellum /data/apps /data/bundles /data/runtime /data/backups
+mkdir -p /run/postgresql /run/rubellum
+chown postgres:postgres /run/postgresql
+chown rubellum:rubellum /run/rubellum
+chmod 755 /run/postgresql
+if [ ! -f /data/postgres/PG_VERSION ]; then
+  s6-setuidgid postgres initdb -D /data/postgres --auth-local=peer --auth-host=reject --no-locale --encoding=UTF8
+fi

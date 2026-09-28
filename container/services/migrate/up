@@ -1,0 +1,1 @@
+/command/s6-setuidgid rubellum /app/bin/rails db:prepare

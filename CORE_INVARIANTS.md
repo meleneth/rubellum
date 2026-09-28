@@ -4,7 +4,8 @@ These are requirements to enforce and test, not claims that every subsystem is
 already implemented. See `IMPLEMENTATION_PLAN.md` for current evidence.
 
 1. **One appliance.** One image/container, one `/data` volume, one HTTP port.
-   PostgreSQL, GoAWS, Rails, consumers, and runners run under s6. Normal use needs
+   PostgreSQL, GoAWS, Redis, Rails, consumers, and runners run under s6. Redis was
+   explicitly added by the owner; SQS remains the runner transport. Normal use needs
    no external service, account, cloud credentials, Docker socket, or runtime CDN.
 2. **Explicit identity.** Every operation scopes installation, notebook, session,
    generation, and execution as applicable. Portable IDs are distinct from local

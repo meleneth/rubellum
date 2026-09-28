@@ -60,6 +60,14 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- AMD64 appliance image builds. `bin/test spec/appliance/boot_spec.rb`: 2 examples,
+  0 failures: fresh boot, only one published HTTP port, PostgreSQL/Redis/secret
+  persistence through restart and replacement, clean PostgreSQL shutdown, fatal
+  critical-service exit. Redis added at owner's request with AOF/RDB persistence,
+  loopback binding and 128 MiB noeviction limit. ARM64 remains unverified.
+- `bin/test spec/unit spec/integration spec/models spec/requests`: 146 examples,
+  0 failures. Includes 16 real PostgreSQL history invariants and raw SQL guards.
+
 - Evaluator and helper API implemented and tested with real subprocesses:
   persistent variables/methods/requires, distinct contexts, separated stdout and
   protocol, bounded output, strict JSON helpers, cell-local errors and unknown

@@ -1,8 +1,8 @@
 # Rubellum
 
-A personal Ruby notebook appliance, under active construction. The intended
-deployment is one container with Rails, PostgreSQL, GoAWS, and persistent notebook
-runners, storing all durable data in one `/data` volume.
+A personal Ruby notebook appliance, under active construction. The image boots
+Rails, PostgreSQL, GoAWS, and Redis in one container with one `/data` volume.
+Notebook authoring and the connected runner workflow are still in progress.
 
 The [build brief](ruby-notebook-appliance-codex-prompt.md) defines the full product.
 The [implementation plan](IMPLEMENTATION_PLAN.md) tracks verified progress, and
@@ -32,5 +32,29 @@ bin/test spec/unit spec/integration
 not yet tested. Alternatively set `GOAWS_BIN` to a GoAWS 0.5.4 executable.
 Integration examples start and stop their own broker with temporary storage.
 
-There is not yet a runnable appliance. Build/run commands will be added with the
-working slices that implement them.
+## Appliance
+
+```sh
+docker build -t rubellum:dev .
+docker run -d --name rubellum -p 127.0.0.1:3001:3000 -v rubellum-data:/data rubellum:dev
+curl -f http://127.0.0.1:3001/up
+```
+
+The current page is an authoring placeholder. `/up` checks actual PostgreSQL,
+GoAWS, and Redis connectivity. Only port 3000 is exposed. Redis 8.0.2 listens on
+container loopback, writes AOF/RDB under `/data/redis`, and has a 128 MiB
+`noeviction` limit. AOF fsync runs every second, so a crash can lose recent Redis
+writes; notebook history belongs to PostgreSQL, and runner transport remains SQS.
+
+```sh
+bin/test spec/unit spec/integration spec/models spec/requests
+bin/test spec/appliance
+```
+
+Database tests require PostgreSQL 17 server binaries (`POSTGRES_BIN` optionally
+sets their directory). Redis tests require `redis-server` (`REDIS_BIN` optionally
+sets its path). Both use isolated temporary stores; they never use your normal
+database or Redis instance. Appliance specs require Docker and the built image,
+and remove only their own generated test containers/volumes.
+
+Service definitions and operational guarantees are in [operations](docs/operations.md).
