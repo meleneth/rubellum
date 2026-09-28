@@ -53,6 +53,15 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Post-interrupt full regression: `bin/test spec/unit spec/models spec/requests
+  spec/integration spec/system`: 330 examples, 0 failures (seed 44834), tracked
+  Ruby line coverage 95.26% / branch 80.08%. `docker build -t rubellum:dev .`
+  succeeds, image `2e2cd85d433c`. This is a local development image; existing
+  published registry tags have not been changed by this implementation work.
+  `bin/test spec/appliance/boot_spec.rb`: 3 examples, 0 failures (seed 19985,
+  94 seconds) against that rebuilt image, including persistence, fatal-service
+  handling and the browser execution/reset/fresh-volume package-import journey.
+
 - Queued interrupt cancellation: `bin/test spec/unit/session_agent_spec.rb
   spec/integration/session_agent_spec.rb spec/integration/interrupt_recovery_spec.rb
   spec/models/execution_transport_spec.rb`: 33 examples, 0 failures (seed 44719).
