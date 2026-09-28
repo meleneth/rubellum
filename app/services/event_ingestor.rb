@@ -36,15 +36,15 @@ class EventIngestor
     kind = envelope.fetch("kind")
     current = session.generation == envelope.fetch("generation")
     if kind == "runner_ready"
-      if envelope.fetch("generation") >= session.generation
+      if envelope.fetch("generation") >= session.generation && !(current && session.restart_generation)
         attributes = { status: "ready", generation: envelope.fetch("generation") }
-        attributes[:next_command_sequence] = 1 unless current
+        attributes.merge!(next_command_sequence: 1, restart_generation: nil) unless current
         session.update!(attributes)
         OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND envelope ->> 'kind' = 'restart' AND (envelope ->> 'generation')::integer < ?", session.id, session.generation).update_all(confirmed_at: Time.current)
       end
       OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND envelope ->> 'kind' = 'start' AND (envelope ->> 'generation')::integer = ?", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)
     elsif kind == "runner_stopped"
-      session.update!(status: "lost") if current
+      session.update!(status: "lost") if current && !session.restart_generation
       session.executions.where(generation: envelope.fetch("generation"), status: "running").update_all(status: "unknown")
       session.executions.where(generation: envelope.fetch("generation"), status: %w[queued accepted]).update_all(status: "cancelled")
       OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND (envelope ->> 'generation')::integer = ? AND envelope ->> 'kind' IN ('start', 'execute', 'interrupt')", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)

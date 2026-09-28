@@ -53,6 +53,13 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Reset admission fencing: `bin/test spec/models/session_reset_spec.rb
+  spec/models/execution_transport_spec.rb spec/models/run_all_spec.rb`:
+  18 examples, 0 failures (seed 59477). Pending resets are durable, reject
+  duplicate resets/new ordinary executions, and survive old ready/stopped facts.
+  Only manager readiness advances the generation and releases admission. The
+  regression tests failed against the previous implementation before the fix.
+
 - Post-interrupt full regression: `bin/test spec/unit spec/models spec/requests
   spec/integration spec/system`: 330 examples, 0 failures (seed 44834), tracked
   Ruby line coverage 95.26% / branch 80.08%. `docker build -t rubellum:dev .`

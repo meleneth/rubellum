@@ -15,6 +15,11 @@ integers. `execution_id` is required on execution commands/events and optional
 on lifecycle messages. `command_id` optionally correlates facts to commands.
 
 Commands: `start`, `execute`, `interrupt`, `restart`, `stop`, `acknowledge`.
+
+Rails records a pending next generation atomically with each restart request.
+Ordinary execution and additional reset requests are rejected while it is pending.
+Old-generation ready/stopped facts cannot clear that pending state; only the
+replacement runner's durable ready fact advances the active generation.
 Facts: `runner_ready`, `runner_stopped`, `execution_accepted`, `execution_started`, `stdout`,
 `stderr`, `structured_output`, `display`, `output_truncated`, `artifact`, `execution_completed`,
 `execution_failed`, `execution_interrupted`, `execution_cancelled`,
