@@ -60,6 +60,11 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- Rails 8.1.4 boots on Ruby 4.0.6. Three request specs pass against temporary
+  PostgreSQL 17.11 and GoAWS processes, including dependency-failure readiness.
+  PostgreSQL test fixtures never use an existing host database. The host lacked
+  server binaries; an extracted Debian PostgreSQL package supplies them locally.
+
 Continue checkpoint 1 with PostgreSQL/s6 appliance boot and the smallest Ruby
 execution/result path, using the verified SDK and broker configuration. Keep
 durable acceptance, clean evaluator exec, and explicit process ownership in scope

@@ -8,6 +8,11 @@ RSpec.describe Rubellum::SqsTransport do
   let(:queue_url) { "http://127.0.0.1:4100/100010001000/test" }
   let(:message) { build(:runner_message) }
 
+  it "checks connectivity without creating or consuming messages" do
+    expect(client).to receive(:list_queues).and_return(Aws::SQS::Types::ListQueuesResult.new(queue_urls: []))
+    expect(transport.available?).to be(true)
+  end
+
   it "creates standard queues with an explicit visibility timeout" do
     expect(client).to receive(:create_queue)
       .with(queue_name: "test", attributes: { "VisibilityTimeout" => "30" })

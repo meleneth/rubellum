@@ -19,6 +19,11 @@ module Rubellum
       @client = client
     end
 
+    def available?
+      @client.list_queues
+      true
+    end
+
     def ensure_queue(name)
       unless name.is_a?(String) && /\A[a-zA-Z0-9_-]{1,80}\z/.match?(name)
         raise ArgumentError, "queue name must contain 1–80 letters, digits, underscores or hyphens"
