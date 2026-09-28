@@ -52,6 +52,15 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Inert package installation stages verified blobs, remaps local identities and
+  references, preserves revision provenance, requires explicit copy on collision,
+  and atomically publishes database state. Recovery retains committed files and
+  removes abandoned installation namespaces. PostgreSQL advisory locking fences
+  recovery against in-flight commit completion; startup runs recovery after
+  migrations. `bin/test spec/models/app_package_import_spec.rb`: 8 examples,
+  0 failures, including real database commit/rollback and a deterministic blocked
+  advisory-lock race. Public controls and rebuilt-image verification remain next.
+
 - `bin/test spec/unit/package_manifest_spec.rb spec/models/app_package_export_spec.rb`:
   12 examples, 0 failures. Versioned machine validation and full/current export
   preserve immutable history/assets, remap portable references and emit readable

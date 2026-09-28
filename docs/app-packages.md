@@ -1,7 +1,7 @@
 # App package format 1
 
-The archive and full/current export services are implemented. Public import,
-copy and export controls are still in progress; this is not a backup command.
+The archive, full/current export and inert import services are implemented.
+Public import/copy/export controls are still in progress; this is not a backup.
 
 Packages use `.rubellum-app.tar.gz`: one gzip member containing regular USTAR
 files. No directory entries, links, devices or extension headers are accepted.
@@ -59,3 +59,25 @@ parameter values, journals, database files, instance secrets and dependency cach
 are never serialized. Arbitrary secrets explicitly authored into source/config
 remain authored content: review it before sharing. Custom dependency declarations
 and explicit environment preparation are a separate, unfinished feature.
+
+## Installation and recovery
+
+The complete archive and manifest are validated before staging. A portable app
+identity already present requires explicit import-as-copy; no merge or replacement
+is performed. Each installation gets new local app/notebook/cell/revision/asset
+IDs. Known asset, renderer, document and restore references are remapped. Imported
+revisions retain timestamps, authors and summaries and record their source app
+and revision in `provenance.imported_from`. Portable object identities survive.
+
+Private staging is under `/data/apps/.imports/<new-installation-uuid>`. Import is
+serialized by a local lock, publishes fsynced immutable files, and commits all
+database records in one transaction. Only committed apps become visible. A
+durable staging marker remains until commit; rollback removes only that new
+installation. Startup (`bin/rails rubellum:prepare`) and subsequent imports recover
+abandoned staging and remove uncommitted published files. Committed installations
+are retained. A PostgreSQL transaction advisory lock fences recovery against a
+commit still completing after its client dies. Installation must own its database
+transaction; callers cannot nest it inside an uncommitted application transaction.
+
+No import prepares dependencies, starts sessions, enqueues execution, renders
+JavaScript or evaluates source. Recorded artifact bytes become ordinary assets.
