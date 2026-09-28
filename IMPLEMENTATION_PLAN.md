@@ -53,6 +53,14 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Durable restart batch core: model reset/run-all specs pass together (11
+  examples, seed 35725). `bin/test spec/integration/restart_run_all_spec.rb
+  spec/integration/interrupt_recovery_spec.rb`: 2 examples, 0 failures (seed
+  58713). Real PostgreSQL/SQS/manager/evaluator recovery loses sent notifications,
+  retries the captured batch in a fresh generation, preserves subsequent ordering,
+  ignores late old stopped facts for current status, and records each side effect
+  once. Public restart-and-run-all controls are the next slice.
+
 - Reset admission fencing: `bin/test spec/models/session_reset_spec.rb
   spec/models/execution_transport_spec.rb spec/models/run_all_spec.rb`:
   18 examples, 0 failures (seed 59477). Pending resets are durable, reject

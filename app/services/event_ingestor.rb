@@ -38,7 +38,10 @@ class EventIngestor
     if kind == "runner_ready"
       if envelope.fetch("generation") >= session.generation && !(current && session.restart_generation)
         attributes = { status: "ready", generation: envelope.fetch("generation") }
-        attributes.merge!(next_command_sequence: 1, restart_generation: nil) unless current
+        unless current
+          next_sequence = session.executions.where(generation: envelope.fetch("generation")).maximum(:sequence).to_i + 1
+          attributes.merge!(next_command_sequence: next_sequence, restart_generation: nil)
+        end
         session.update!(attributes)
         OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND envelope ->> 'kind' = 'restart' AND (envelope ->> 'generation')::integer < ?", session.id, session.generation).update_all(confirmed_at: Time.current)
       end

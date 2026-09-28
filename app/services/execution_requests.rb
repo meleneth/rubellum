@@ -43,6 +43,27 @@ class ExecutionRequests
     end
   end
 
+  def self.restart_all(notebook)
+    notebook.with_lock do
+      snapshot = notebook.head_revision
+      revisions = snapshot.ordered_revisions.select { |revision| revision.cell_type == "ruby" }
+      return [] if revisions.empty?
+      session = NotebookSession.find_by(notebook:)
+      return RunAll.call(notebook) unless session
+
+      session.with_lock do
+        request_reset(session)
+        data = NotebookData.new(notebook)
+        inputs, datasets = data.inputs, data.datasets
+        batch_id = SecureRandom.uuid
+        revisions.each_with_index.map do |revision, index|
+          enqueue(session:, revision:, notebook_revision: snapshot, generation: session.restart_generation,
+            sequence: index + 1, inputs:, datasets:, batch_id:)
+        end
+      end
+    end
+  end
+
   def self.request_reset(session)
     raise History::Conflict, "Session reset is already pending" if session.restart_generation
     lifecycle(session, "start") if session.status == "requested"
