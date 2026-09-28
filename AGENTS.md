@@ -5,9 +5,13 @@ Read `ruby-notebook-appliance-codex-prompt.md`, `IMPLEMENTATION_PLAN.md`, and
 contract; the plan records progress, not a reduced scope.
 
 - Make small, frequent commits, each with a coherent, reviewable change.
-- Add meaningful RSpec unit tests alongside behavior changes. Cover invalid
-  inputs, boundary conditions, and failure/recovery behavior. Prefer plain Ruby
-  objects and verifying doubles at actual external boundaries.
+- All tests must use RSpec. Add meaningful unit tests alongside behavior changes;
+  cover invalid inputs, boundary conditions, and failure/recovery behavior.
+- All mocks/doubles must verify the real interface: use `instance_double`,
+  `class_double`, or `object_double`, never unverified `double` or `spy`. Keep
+  `verify_partial_doubles` and `verify_doubled_constant_names` enabled. Load the
+  real class before doubling it. Do not use `allow_any_instance_of` or
+  `expect_any_instance_of`. Prefer plain Ruby objects with injected boundaries.
 - Run the relevant tests before committing. Keep unit tests independent of
   Rails, PostgreSQL, and GoAWS where possible; use real services to verify their
   contracts. Never describe mocks as integration evidence.
