@@ -117,6 +117,11 @@ JSON, or CSV (up to 1 MiB). Original bytes are retained as immutable assets; imp
 does not execute code. **Export source** downloads the selected cell revision,
 including when viewing history.
 
+For Markdown, open **Edit source** and choose **Edit Markdown**, **Preview
+Markdown**, or **Split Markdown**. Draft previews update without saving a wiki
+revision; the separately labeled saved rendering changes only after Save revision.
+Switching modes preserves the editor and undo history.
+
 ### Editing and execution semantics
 
 - **Drafts are not revisions.** Edits autosave separately with tab-local recovery.
@@ -145,7 +150,7 @@ including when viewing history.
 
 | Type | Current behavior |
 | --- | --- |
-| Markdown | Source editing, sanitized preview, local images, highlighted code, file import/export |
+| Markdown | Edit/preview/split modes, sanitized draft preview, local images, highlighted code, file import/export |
 | Ruby | Persistent notebook context, stdout/stderr, return values, named JSON outputs, errors and interrupt |
 | Data | JSON or CSV source, parsing configuration, validation and preview |
 | Parameters | Versioned text/number/boolean/select/slider definitions; separate current values |
@@ -280,7 +285,7 @@ requests blocked; a fully network-disabled appliance journey remains to be run.
 
 ## Remaining work and references
 
-Still unfinished: Markdown split preview, custom
+Still unfinished: custom
 gem preparation, coordinated backup/restore, richer
 diffs and editor controls, complete journal retention/pressure handling, and the
 remaining lifecycle/renderer/offline acceptance cases. There is no whole-appliance

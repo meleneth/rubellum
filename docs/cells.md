@@ -18,7 +18,16 @@ The chosen format is explicit, data is validated before installation, and the
 original upload is retained in the revision's `configuration.asset_ids` list.
 CSV imports record delimiter/header/blank-line choices. Imports never evaluate
 Ruby or JavaScript. **Export source** downloads the exact selected revision;
-table cells export their configuration. Markdown split preview remains unfinished.
+table cells export their configuration.
+
+Markdown's **Edit source** section offers **Edit Markdown**, **Preview Markdown**
+and **Split Markdown**. The split view stacks on narrow screens. Preview renders
+the current draft with the same sanitization, highlighting and app-asset scoping
+as saved Markdown. It does not create revisions or execute code; ordinary draft
+autosave remains separate. The labeled saved rendering stays unchanged until
+Save revision. Mode switches preserve CodeMirror and its undo history. Requests
+are debounced, cancelled and fenced so obsolete responses cannot replace a newer
+draft preview.
 
 ## Data and parameters
 

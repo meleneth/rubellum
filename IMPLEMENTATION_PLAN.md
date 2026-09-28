@@ -41,7 +41,7 @@ an incomplete checkpoint complete.
 ## Next concrete work
 
 1. Close remaining history/authoring gaps: richer source/structure comparisons,
-   Markdown split preview and editing affordances. Metadata editing/restore now
+   editing affordances. Metadata editing/restore and Markdown split preview now
    works through the public app and notebook history controls.
 2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
    descendant cleanup tests, durable control reconciliation, complete journal
@@ -52,6 +52,13 @@ an incomplete checkpoint complete.
    remaining public-path fixture journeys. ARM64 remains unverified.
 
 ## Latest verification
+
+- Markdown draft edit/preview/split modes: `npm run build` and `bin/test
+  spec/requests/markdown_preview_spec.rb spec/system/markdown_preview_spec.rb
+  spec/system/authoring_spec.rb`: 8 examples, 0 failures (seed 23824). Real Chrome
+  verifies live sanitized preview/highlighting, retained editor/undo across modes,
+  and explicit-save semantics. Request tests cover empty/oversized/invalid source,
+  app/asset scoping and no revision/draft/execution writes by the preview endpoint.
 
 - D3 lifecycle regression reproduced an obsolete promise rejection overwriting a
   newer chart's status. Frame/controller now fence requests and errors by render

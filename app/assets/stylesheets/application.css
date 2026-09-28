@@ -38,6 +38,11 @@
   .prose { line-height: 1.8; } .prose p, .prose pre, .prose table { margin: .8rem 0; } .prose ul { list-style: disc; padding-left: 1.5rem; } .prose ol { list-style: decimal; padding-left: 1.5rem; } .prose a { color: var(--accent); text-decoration: underline; }
   .highlight .k, .highlight .kd, .highlight .nb { color: var(--accent); } .highlight .s, .highlight .s1, .highlight .s2 { color: #448369; } .highlight .c, .highlight .c1 { color: var(--muted); }
   .cm-editor { border: 1px solid var(--line); border-radius: .4rem; font-size: .85rem; } .cm-scroller { max-height: 500px; } .cm-gutters { background: var(--paper) !important; color: var(--muted) !important; border-color: var(--line) !important; }
+  .markdown-workspace { min-width: 0; } .markdown-workspace[data-mode="edit"] .draft-preview, .markdown-workspace[data-mode="preview"] .source-pane { display: none; }
+  .markdown-workspace[data-mode="split"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; }
+  .markdown-workspace .draft-preview, .markdown-workspace .source-pane { min-width: 0; } .markdown-workspace .draft-preview { border: 1px solid var(--line); border-radius: .4rem; padding: 1rem; overflow: auto; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 760px) { .markdown-workspace[data-mode="split"] { grid-template-columns: minmax(0, 1fr); } }
   .presenting { display: block; } .presenting .edit-control { display: none; } .presenting .document { max-width: 1000px; margin: auto; }
   @media (max-width: 760px) { .workspace { display: block; } .sidebar { border-right: 0; border-bottom: 1px solid var(--line); } .topbar { padding: .8rem 1rem; } .brand .muted { display: none; } .library { padding: 2rem 1rem; } }
 }

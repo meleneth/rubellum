@@ -7,9 +7,11 @@ import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 
 export default class extends Controller {
-  static targets = ["source", "mount", "identity", "status", "recover"];
-  static values = {language: String, draftUrl: String};
+  static targets = ["source", "mount", "identity", "status", "recover", "workspace", "preview", "previewStatus", "modeButton"];
+  static values = {language: String, draftUrl: String, previewUrl: String};
   connect() {
+    this.previewSequence = 0;
+    this.mode = this.workspaceTarget.dataset.mode || "edit";
     this.identityTarget.value = sessionStorage.getItem("rubellum:editor") || crypto.randomUUID();
     sessionStorage.setItem("rubellum:editor", this.identityTarget.value);
     this.cacheKey = `${this.draftUrlValue}:${this.identityTarget.value}`;
@@ -29,6 +31,7 @@ export default class extends Controller {
     this.beforeCache = () => this.teardown();
     document.addEventListener("turbo:before-cache", this.beforeCache);
     this.loadDraft();
+    if (this.hasPreviewTarget && this.mode !== "edit") this.refreshPreview();
   }
   snapshot() {
     this.sourceTarget.value = this.view.state.doc.toString();
@@ -41,6 +44,49 @@ export default class extends Controller {
     sessionStorage.setItem(this.cacheKey, JSON.stringify(draft));
     clearTimeout(this.timer);
     this.timer = setTimeout(() => this.saveDraft(draft), 600);
+    clearTimeout(this.previewTimer);
+    if (this.hasPreviewTarget && this.mode !== "edit") {
+      ++this.previewSequence;
+      this.previewRequest?.abort();
+      this.previewStatusTarget.textContent = "Updating draft preview…";
+      this.previewTimer = setTimeout(() => this.refreshPreview(), 250);
+    }
+  }
+
+  setMode(event) {
+    const mode = event.currentTarget.dataset.mode;
+    if (!this.hasPreviewTarget || !["edit", "preview", "split"].includes(mode)) return;
+    this.mode = mode;
+    this.workspaceTarget.dataset.mode = mode;
+    this.modeButtonTargets.forEach(button => button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
+    this.view.requestMeasure();
+    clearTimeout(this.previewTimer);
+    this.previewRequest?.abort();
+    ++this.previewSequence;
+    if (mode !== "edit") this.refreshPreview();
+  }
+
+  async refreshPreview() {
+    if (!this.view || this.mode === "edit") return;
+    const sequence = ++this.previewSequence;
+    this.previewRequest?.abort();
+    this.previewRequest = new AbortController();
+    this.previewStatusTarget.textContent = "Updating draft preview…";
+    try {
+      const response = await fetch(this.previewUrlValue, {method: "POST", signal: this.previewRequest.signal,
+        headers: {"Content-Type": "application/json", "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content || ""},
+        body: JSON.stringify({source: this.view.state.doc.toString()})});
+      const html = await response.text();
+      if (!response.ok) throw new Error(html);
+      if (!this.view || !this.element.isConnected || sequence !== this.previewSequence) return;
+      this.previewTarget.innerHTML = html; // Server-rendered, sanitized Markdown only.
+      this.previewStatusTarget.textContent = "Draft preview · not a saved revision";
+    } catch (error) {
+      if (error.name !== "AbortError" && this.view && sequence === this.previewSequence) {
+        this.previewTarget.replaceChildren();
+        this.previewStatusTarget.textContent = `Preview unavailable: ${error.message}`;
+      }
+    }
   }
   async saveDraft(draft) {
     // Serialize writes so an older response can never overwrite a newer draft.
@@ -87,6 +133,9 @@ export default class extends Controller {
     this.view.destroy(); this.view = null;
     this.sourceTarget.hidden = false;
     clearTimeout(this.timer);
+    clearTimeout(this.previewTimer);
+    ++this.previewSequence;
+    this.previewRequest?.abort();
   }
   disconnect() { this.teardown(); this.element.removeEventListener("input", this.onInput); this.element.removeEventListener("turbo:submit-end", this.onSubmitEnd); document.removeEventListener("turbo:before-cache", this.beforeCache); }
 }

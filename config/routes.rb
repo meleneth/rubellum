@@ -21,6 +21,7 @@ Rails.application.routes.draw do
         post :import_file, on: :collection
         member do
           get :export
+          post :preview
           post :run
           post :move
           post :restore

@@ -24,6 +24,16 @@ class CellsController < ApplicationController
     send_data source, filename:, type: "text/plain; charset=utf-8", disposition: "attachment"
   end
 
+  def preview
+    raise ArgumentError, "Draft preview is only available for Markdown cells" unless @cell.head_revision.cell_type == "markdown"
+    source = params.fetch(:source, "")
+    unless source.is_a?(String) && source.valid_encoding? && source.bytesize <= 1_048_576 && !source.include?("\0")
+      raise ArgumentError, "Preview source must be valid UTF-8 Markdown up to 1 MiB"
+    end
+    AssetReferences.validate!(app_id: @app.id, configuration: {}, source:)
+    render html: helpers.markdown(source, app: @app), layout: false
+  end
+
   def create
     type = params.require(:cell_type)
     History.new(@notebook).add_cell(cell_type: type, source: CellTemplates.source(type),

@@ -14,7 +14,7 @@
   - unless historical
     %details.edit-control.source-details{open: revision.cell_type == "ruby"}
       %summary Edit source
-      = form_with url: app_notebook_cell_path(@app, @notebook, revision.cell_id), method: :patch, namespace: "cell-#{revision.cell_id}", data: { controller: "editor", editor_language_value: revision.cell_type, editor_draft_url_value: draft_app_notebook_cell_path(@app, @notebook, revision.cell_id), action: "submit->editor#prepare" }, class: "stack mt-3" do |form|
+      = form_with url: app_notebook_cell_path(@app, @notebook, revision.cell_id), method: :patch, namespace: "cell-#{revision.cell_id}", data: { controller: "editor", editor_language_value: revision.cell_type, editor_draft_url_value: draft_app_notebook_cell_path(@app, @notebook, revision.cell_id), editor_preview_url_value: preview_app_notebook_cell_path(@app, @notebook, revision.cell_id), action: "submit->editor#prepare" }, class: "stack mt-3" do |form|
         = form.hidden_field :expected_revision, value: revision.id
         = form.hidden_field :editor_id, data: { editor_target: "identity" }
         .grid.gap-3{class: "md:grid-cols-2"}
@@ -24,9 +24,19 @@
           %div
             = form.label :cell_type, "Cell type"
             = form.select :cell_type, CellRevision::TYPES, selected: revision.cell_type
-        = form.label :source, "Source"
-        = form.text_area :source, value: revision.source, rows: 8, data: { editor_target: "source" }, spellcheck: false
-        %div{data: {editor_target: "mount"}}
+        - if revision.cell_type == "markdown"
+          .flex.gap-2{role: "group", aria: {label: "Markdown view"}}
+            - %w[edit preview split].each do |mode|
+              %button.quiet-button{type: "button", data: {editor_target: "modeButton", action: "editor#setMode", mode: mode}, aria: {pressed: (mode == "edit").to_s}}= "#{mode.capitalize} Markdown"
+        %div{class: ("markdown-workspace" if revision.cell_type == "markdown"), data: {editor_target: "workspace", mode: "edit"}}
+          .source-pane
+            = form.label :source, "Source"
+            = form.text_area :source, value: revision.source, rows: 8, data: { editor_target: "source" }, spellcheck: false
+            %div{data: {editor_target: "mount"}}
+          - if revision.cell_type == "markdown"
+            .draft-preview
+              %p.muted.text-xs{data: {editor_target: "previewStatus"}, aria: {live: "polite"}} Draft preview · not a saved revision
+              .prose{data: {editor_target: "preview"}}
         %details
           %summary Configuration and input binding
           %p.muted.text-xs.mt-2
@@ -45,6 +55,8 @@
   .cell-content
     - case revision.cell_type
     - when "markdown"
+      - unless historical
+        %p.muted.text-xs.edit-control Saved revision
       .prose= markdown(revision.source, app: @app)
     - when "ruby"
       - if historical
