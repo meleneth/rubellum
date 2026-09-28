@@ -8,5 +8,17 @@ The [build brief](ruby-notebook-appliance-codex-prompt.md) defines the full prod
 The [implementation plan](IMPLEMENTATION_PLAN.md) tracks verified progress, and
 [core invariants](CORE_INVARIANTS.md) record the guarantees tests must protect.
 
-Build/run/test commands will be added with the working slices that implement
-them. There is not yet a runnable appliance.
+## Development
+
+Use Ruby 4.0.6 and Bundler 4.0.16:
+
+```sh
+BUNDLE_PATH=vendor/bundle bundle install
+bin/test spec/unit
+```
+
+Tests use RSpec with verifying doubles. Unit tests require no database, broker,
+or Rails boot. SimpleCov writes line/branch coverage to `coverage/`.
+
+There is not yet a runnable appliance. Build/run commands will be added with the
+working slices that implement them.

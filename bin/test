@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+Dir.chdir File.expand_path("..", __dir__)
+ENV["BUNDLE_PATH"] ||= "vendor/bundle" if File.directory?("vendor/bundle")
+ENV["BUNDLE_USER_HOME"] ||= File.expand_path("../tmp/bundler", __dir__)
+require "bundler/setup"
+load Gem.bin_path("rspec-core", "rspec")

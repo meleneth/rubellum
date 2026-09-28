@@ -34,8 +34,15 @@ an incomplete checkpoint complete.
   `b4ae31b` on 2026-09-28.
 - Host: AMD64, Ruby 4.0.6, Bundler 4.0.16, Node 24.21.0, Docker available.
 - No unresolved product decision blocks the first checkpoint.
+- Pinned Ruby 4.0.6, Rails 8.1.4 (declares Ruby >= 3.2), AWS SDK SQS 1.119.0.
+  Real SDK/broker interoperability and Rails boot remain to be verified.
 
 ## Verification ledger
 
 - 2026-09-28: read the full brief and applicable guidance; verified clean tree
   and Docker daemon access. No application acceptance tests exist yet.
+- 2026-09-28: `bin/test spec/unit`: 66 examples, 0 failures. Shared message
+  envelope and strict JSON copying cover invalid identities, unsupported schema,
+  required fields, duplicate keys, size/depth bounds, and mutation protection.
+  Line coverage 100%; branch coverage 92.86% for these two classes. This does not
+  prove transport, durability, execution, or application acceptance behavior.
