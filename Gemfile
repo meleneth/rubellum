@@ -20,4 +20,6 @@ group :development, :test do
   gem "rspec-rails", "8.0.4"
   gem "factory_bot", "6.5.6"
   gem "simplecov", "0.22.0", require: false
+  gem "capybara", "3.40.0"
+  gem "cuprite", "0.18", require: false
 end

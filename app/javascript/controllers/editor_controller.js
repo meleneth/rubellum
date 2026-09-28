@@ -22,6 +22,10 @@ export default class extends Controller {
     this.sourceTarget.hidden = true;
     this.onInput = event => { if (!event.target.closest(".cm-editor")) this.changed(); };
     this.element.addEventListener("input", this.onInput);
+    this.onSubmitEnd = event => {
+      if (event.detail.success) sessionStorage.removeItem(this.cacheKey);
+    };
+    this.element.addEventListener("turbo:submit-end", this.onSubmitEnd);
     this.beforeCache = () => this.teardown();
     document.addEventListener("turbo:before-cache", this.beforeCache);
     this.loadDraft();
@@ -59,7 +63,8 @@ export default class extends Controller {
       const cached = sessionStorage.getItem(this.cacheKey);
       const response = await fetch(`${this.draftUrlValue}?editor_id=${this.identityTarget.value}`);
       const draft = cached ? JSON.parse(cached) : (response.ok ? await response.json() : {});
-      if (!this.dirty && draft.source !== undefined && (draft.source !== this.sourceTarget.value || draft.title !== this.element.elements.title.value || JSON.stringify(draft.configuration) !== JSON.stringify(JSON.parse(this.element.elements.configuration.value)))) {
+      const configuration = typeof draft.configuration === "string" ? JSON.parse(draft.configuration) : draft.configuration;
+      if (!this.dirty && draft.source !== undefined && (draft.source !== this.sourceTarget.value || draft.title !== this.element.elements.title.value || draft.cell_type !== this.element.elements.cell_type.value || JSON.stringify(configuration) !== JSON.stringify(JSON.parse(this.element.elements.configuration.value)))) {
         this.draft = draft;
         this.recoverTarget.classList.remove("hidden");
         this.statusTarget.textContent = "A recoverable draft is available";
@@ -83,5 +88,5 @@ export default class extends Controller {
     this.sourceTarget.hidden = false;
     clearTimeout(this.timer);
   }
-  disconnect() { this.teardown(); this.element.removeEventListener("input", this.onInput); document.removeEventListener("turbo:before-cache", this.beforeCache); }
+  disconnect() { this.teardown(); this.element.removeEventListener("input", this.onInput); this.element.removeEventListener("turbo:submit-end", this.onSubmitEnd); document.removeEventListener("turbo:before-cache", this.beforeCache); }
 }

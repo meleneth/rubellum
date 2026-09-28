@@ -21,6 +21,13 @@ class EventIngestor
       end
       acknowledge(session, cursor) if cursor.through_sequence.positive?
     end
+    # Notifications are disposable: only publish after the durable facts commit.
+    # Reconnect/poll reconciliation reads those facts even if Cable is unavailable.
+    ActiveRecord.after_all_transactions_commit do
+      ExecutionUpdates.broadcast(session)
+    rescue StandardError => error
+      Rails.logger.warn("[events] broadcast failed session=#{session.id} error=#{error.class}")
+    end
   end
 
   private

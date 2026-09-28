@@ -60,6 +60,14 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- `bin/test spec/models/execution_updates_spec.rb spec/system/authoring_spec.rb`:
+  4 examples, 0 failures in real Chrome 154. Browser evidence: public create/edit/
+  save/recover, local highlighted Markdown, table filtering, explicit iframe D3,
+  slider refresh without Ruby, and output reconciliation retaining editor focus,
+  source and undo. Broadcasts target only output/status nodes. External page
+  requests are blocked. This does not yet prove all renderer cleanup races or
+  the full container-to-browser execution acceptance path.
+
 - Owner preferences are persisted in `AGENTS.md`: Haml templates, RSpec with
   verifying doubles, FactoryBot, and small frequent commits. Haml Rails is pinned;
   all application templates use Haml and generator defaults match.
