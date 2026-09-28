@@ -9,13 +9,13 @@
   :root {
     --paper: #f6e8e0; --panel: #ffffff; --ink: #10121c; --muted: #5e5b8c;
     --line: #8c78a5; --accent: #ac2847; --accent-ink: #ffffff; --error: #ac2847;
-    --syntax-string: #006554; --syntax-number: #3859b3; --selection: #deceed;
+    --syntax-string: #006554; --syntax-number: #3859b3; --selection: #ffd1d5;
     --active-line: #f6e8e0; --match: #f7f3b7; --bracket: #d3eed3; color-scheme: light;
   }
   :root[data-theme="dark"] {
     --paper: #10121c; --panel: #2c1e31; --ink: #f6e8e0; --muted: #b0a7b8;
-    --line: #8c78a5; --accent: #ffa2ac; --accent-ink: #10121c; --error: #fa6e79;
-    --syntax-string: #a6cb96; --syntax-number: #36c5f4; --selection: #3e3b65;
+    --line: #8c78a5; --accent: #ffa2ac; --accent-ink: #10121c; --error: #ffa2ac;
+    --syntax-string: #a6cb96; --syntax-number: #36c5f4; --selection: #1e4044;
     --active-line: #10121c; --match: #6b2643; --bracket: #1e4044; color-scheme: dark;
   }
   * { scrollbar-color: var(--muted) var(--paper); }

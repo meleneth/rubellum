@@ -54,6 +54,15 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Full reset/palette milestone: `bin/test spec/unit spec/models spec/requests
+  spec/integration spec/system`: 348 examples, 0 failures (seed 12744), tracked
+  Ruby coverage 96.95% lines / 82.31% branches. AMD64 image `8d93587730e4` builds;
+  `bin/test spec/appliance/boot_spec.rb`: 3 examples, 0 failures (seed 57327,
+  103 seconds). A final contrast audit then tightened selection/error tokens so
+  all syntax text also meets 4.5:1 on selection, active-line, search and bracket
+  backgrounds. `npm run build` plus palette unit/Chrome checks after that CSS-only
+  adjustment: 5 examples, 0 failures (seed 6976).
+
 - Lospec500 palette enforcement: canonical 42-color list bundled locally, strict
   AGENTS requirement, semantic light/dark tokens, palette-only editor syntax/UI,
   native controls and chart theme. `npm run build` passes. Palette + renderer

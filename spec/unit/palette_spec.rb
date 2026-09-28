@@ -48,7 +48,7 @@ RSpec.describe "Lospec500 color contract" do
     themes.each do |theme|
       tokens = theme.scan(/--([\w-]+):\s*(#[\da-f]{6})/).to_h
       %w[ink muted accent error syntax-string syntax-number].each do |foreground|
-        %w[paper panel].each do |background|
+        %w[paper panel selection active-line match bracket].each do |background|
           expect(contrast(tokens.fetch(foreground), tokens.fetch(background))).to be >= 4.5
         end
       end
