@@ -5,6 +5,8 @@ Read `ruby-notebook-appliance-codex-prompt.md`, `IMPLEMENTATION_PLAN.md`, and
 contract; the plan records progress, not a reduced scope.
 
 - Make small, frequent commits, each with a coherent, reviewable change.
+- Prefer Haml over ERB for Rails views. Use Haml for new templates and preserve
+  normal HTML escaping; do not mark user-authored content safe indiscriminately.
 - All tests must use RSpec. Add meaningful unit tests alongside behavior changes;
   cover invalid inputs, boundary conditions, and failure/recovery behavior.
 - All mocks/doubles must verify the real interface: use `instance_double`,
