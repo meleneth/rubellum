@@ -52,6 +52,18 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Corrected a documentation-link check to recognize `asset://` examples and a
+  real GoAWS fixture bind race. `bin/test spec/unit/documentation_spec.rb
+  spec/integration/goaws_spec.rb`: 9 examples, 0 failures, including a deliberately
+  occupied first-boot port. Restarts retain the original endpoint; only initial
+  bind collisions are retried, not arbitrary broker errors.
+
+- `bin/test spec/models/cell_files_spec.rb spec/requests/cell_files_spec.rb
+  spec/requests/assets_spec.rb`: 10 examples, 0 failures. Public Markdown/data
+  imports validate UTF-8, source size, format and document base revision; preserve
+  original immutable file bytes; never enqueue execution; and export exact
+  selected historical source. CSV parsing choices are stored with the revision.
+
 - `bin/test spec/unit/execution_payload_spec.rb spec/unit/session_agent_spec.rb
   spec/integration/full_execution_spec.rb spec/models/execution_transport_spec.rb
   spec/models/run_all_spec.rb`: 26 examples, 0 failures. Large source and input

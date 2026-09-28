@@ -61,12 +61,28 @@ RSpec.describe "GoAWS 0.5.4 / aws-sdk-sqs 1.119.0 contract" do
 
   it "loses topology on restart and accepts recreated queues and republished envelopes" do
     transport.publish(queue, message)
+    original_endpoint = @broker.endpoint
     @broker.stop
     @broker.start
+    expect(@broker.endpoint).to eq(original_endpoint)
     expect(client.list_queues.queue_urls).to be_empty
     restored_queue = transport.ensure_queue("rubellum-contract")
     expect(transport.receive(restored_queue, wait_seconds: 0)).to be_empty
     transport.publish(restored_queue, message)
     expect(transport.receive(restored_queue, wait_seconds: 0).fetch(0).message.to_h).to eq(message.to_h)
+  end
+end
+
+RSpec.describe "GoAWS fixture port ownership" do
+  it "recovers a deterministic first-boot port collision without claiming another listener is ready" do
+    broker = GoawsProcess.new
+    original_endpoint = broker.endpoint
+    collision = TCPServer.new("0.0.0.0", URI(original_endpoint).port)
+    broker.start
+    expect(broker.endpoint).not_to eq(original_endpoint)
+    expect(Rubellum::SqsTransport.local(endpoint: broker.endpoint).available?).to be(true)
+  ensure
+    collision&.close
+    broker&.close
   end
 end

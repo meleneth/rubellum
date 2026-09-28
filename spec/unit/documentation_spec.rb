@@ -18,7 +18,7 @@ RSpec.describe "Documented examples" do
   end
 
   it "keeps README links pointed at real repository documents" do
-    paths = readme.scan(/\[[^\]]+\]\(([^)]+)\)/).flatten.reject { |path| path.start_with?("http", "#") }
+    paths = readme.scan(/\[[^\]]+\]\(([^)]+)\)/).flatten.reject { |path| path.start_with?("http", "#", "asset://") }
     expect(paths).not_to be_empty
     paths.each { |path| expect(root.join(path)).to exist, "Missing README link target: #{path}" }
   end
