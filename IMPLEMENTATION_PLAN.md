@@ -52,6 +52,18 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Full regression after public package controls: `bin/test spec/unit spec/models
+  spec/requests spec/integration spec/system`: 292 examples, 0 failures (seed
+  17879), Ruby line coverage 94.24% / branch 77.75%. `npm run build` and rebuilt
+  AMD64 image pass. Expanded fresh-appliance package journey is running next.
+
+- `bin/test spec/requests/app_packages_spec.rb spec/integration/app_package_cli_spec.rb
+  spec/system/app_packages_spec.rb`: 6 examples, 0 failures. Public full/current
+  downloads, inert upload, explicit collision/copy, duplicate, actual CLI
+  subprocesses and Chrome import/copy all pass. CLI refuses file overwrite.
+  No imported Ruby/D3 execution or session allocation occurs. README documents
+  commands and explicit named-volume/host-directory `/data` mounts.
+
 - Inert package installation stages verified blobs, remaps local identities and
   references, preserves revision provenance, requires explicit copy on collision,
   and atomically publishes database state. Recovery retains committed files and

@@ -9,8 +9,8 @@ PostgreSQL, GoAWS, Redis, Rails, and notebook workers are bundled—no Compose,
 external AWS account, hosted service, runtime CDN, or Docker socket required.
 
 **Under active development.** The authoring and execution paths work, but the
-full product contract is not complete. App import/export, custom gem environments,
-and coordinated backup/restore are not ready.
+full product contract is not complete. Custom gem environments and coordinated
+backup/restore are not ready.
 Use disposable development data until backup/restore is implemented and verified.
 
 ## Quick start
@@ -155,6 +155,42 @@ images**; reference them in Markdown with `![Image](asset://ASSET-UUID)`.
 See the [Ruby helper reference](docs/evaluator.md) and
 [cell/renderer reference](docs/cells.md) for contracts and limits.
 
+## Portable apps
+
+In the app library, choose **Import an app package**. Each app's **App settings**
+offers **Export full history**, **Export current state only**, and **Duplicate
+app**. Full export includes removed cells and earlier revisions; current-state
+export omits those revisions and removed cells. Both include immutable app assets.
+
+Import validates the complete `.rubellum-app.tar.gz` package before installation.
+If its portable identity is already installed, choose **Import as copy** or
+**Cancel**; existing apps are never overwritten. Copies get independent local
+identities and preserve source history/provenance. Import never runs Ruby or D3,
+starts a session, or prepares dependencies. Recorded executions, live interpreter
+memory, runtime input values, drafts and instance secrets are not packaged.
+Review any credentials you explicitly wrote in source/configuration before sharing.
+
+The same operations are available inside the appliance (the local app UUID appears
+in its browser URL). Export refuses to overwrite an existing file:
+
+```sh
+docker exec --user rubellum rubellum bin/app-package export APP_UUID /data/backups/project.rubellum-app.tar.gz
+docker cp rubellum:/data/backups/project.rubellum-app.tar.gz ./project.rubellum-app.tar.gz
+
+docker cp ./project.rubellum-app.tar.gz rubellum:/data/backups/incoming.rubellum-app.tar.gz
+docker exec rubellum chown rubellum:rubellum /data/backups/incoming.rubellum-app.tar.gz
+docker exec --user rubellum rubellum bin/app-package import /data/backups/incoming.rubellum-app.tar.gz
+# Explicitly install another copy when that identity already exists:
+docker exec --user rubellum rubellum bin/app-package import /data/backups/incoming.rubellum-app.tar.gz --copy
+```
+
+Run package commands as the `rubellum` container user to preserve file ownership.
+Copied-in archives must be readable by that user. Add `--current` to export only
+current state. Packages are limited to 64 MiB
+compressed / 256 MiB expanded; each asset is limited to 25 MiB. See the
+[package format and recovery contract](docs/app-packages.md). An app package is
+not a whole-appliance backup.
+
 ## What's inside
 
 The pinned stack is Ruby **4.0.6**, Rails **8.1.4**, PostgreSQL **17**,
@@ -240,12 +276,11 @@ requests blocked; a fully network-disabled appliance journey remains to be run.
 
 ## Remaining work and references
 
-Still unfinished: portable app packages/import/export/duplicate,
-Markdown split preview, custom
+Still unfinished: Markdown split preview, custom
 gem preparation, coordinated backup/restore, richer
 diffs and editor controls, complete journal retention/pressure handling, and the
-remaining lifecycle/renderer/offline acceptance cases. No import/export or backup
-CLI is advertised before it actually exists.
+remaining lifecycle/renderer/offline acceptance cases. There is no whole-appliance
+backup/restore CLI yet.
 
 - [Implementation plan and verification ledger](IMPLEMENTATION_PLAN.md)
 - [Core invariants](CORE_INVARIANTS.md)

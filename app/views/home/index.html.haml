@@ -2,6 +2,7 @@
   %p.eyebrow A place to think in Ruby
   %h1 Your Ruby notebooks
   %p.muted.mb-8 Notes, live code, and small tools. Each app is a project of its own.
+  %p.mb-6= link_to "Import an app package", import_apps_path, class: "quiet-button"
   = form_with url: apps_path, class: "panel flex gap-3 items-end mb-8" do |form|
     .grow
       = form.label :title, "New app name"
@@ -29,3 +30,7 @@
             = form.label :archived, "Archive state"
             = form.select :archived, [["Active", "false"], ["Archived", "true"]], selected: app.archived_at ? "true" : "false"
             = form.submit "Save app revision", class: "quiet-button"
+          .flex.flex-wrap.gap-3.mt-4
+            = link_to "Export full history", export_app_path(app), class: "quiet-button", data: {turbo: false}
+            = link_to "Export current state only", export_app_path(app, mode: "current"), class: "quiet-button", data: {turbo: false}
+            = button_to "Duplicate app", duplicate_app_path(app), class: "quiet-button"

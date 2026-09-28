@@ -1,7 +1,8 @@
 # App package format 1
 
-The archive, full/current export and inert import services are implemented.
-Public import/copy/export controls are still in progress; this is not a backup.
+Use the app library's import/export/duplicate controls or `bin/app-package`.
+Full/current export and inert import use the same services in both paths; neither
+is a whole-appliance backup. See the README for appliance commands.
 
 Packages use `.rubellum-app.tar.gz`: one gzip member containing regular USTAR
 files. No directory entries, links, devices or extension headers are accepted.

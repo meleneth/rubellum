@@ -2,7 +2,11 @@ Rails.application.routes.draw do
   root "home#index"
   get "/up", to: "health#show"
   mount ActionCable.server => "/cable"
+  get "/apps/import", to: "app_packages#new", as: :import_apps
+  post "/apps/import", to: "app_packages#create"
   resources :apps, only: [:create, :show, :update] do
+    get :export, on: :member, to: "app_packages#export"
+    post :duplicate, on: :member, to: "app_packages#duplicate"
     resources :assets, only: [:index, :create, :show]
     resources :notebooks, only: [:create, :show] do
       member do

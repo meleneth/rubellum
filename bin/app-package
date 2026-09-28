@@ -1,0 +1,44 @@
+#!/usr/bin/env ruby
+require "optparse"
+require "tempfile"
+require_relative "../config/environment"
+
+options = {}
+parser = OptionParser.new do |flags|
+  flags.banner = "Usage: bin/app-package export APP_ID PATH [--current]\n       bin/app-package import PATH [--copy]"
+  flags.on("--current", "Export current state without earlier revisions") { options[:current] = true }
+  flags.on("--copy", "Explicitly install another copy on portable identity collision") { options[:copy] = true }
+end
+
+begin
+  parser.parse!(ARGV)
+  command = ARGV.shift
+  case command
+  when "export"
+    raise ArgumentError, parser.to_s unless ARGV.size == 2 && !options[:copy]
+    app_id, destination = ARGV
+    bytes = AppPackageExport.call(app: App.find(app_id), mode: options[:current] ? "current" : "full")
+    directory = File.dirname(File.expand_path(destination))
+    Tempfile.create([".rubellum-export-", ".tmp"], directory, binmode: true) do |temporary|
+      temporary.write(bytes)
+      temporary.flush
+      temporary.fsync
+      File.link(temporary.path, destination) # Refuse overwrite; publication is atomic.
+      File.open(directory, File::RDONLY, &:fsync)
+    end
+    puts "Exported #{app_id} to #{destination}"
+  when "import"
+    raise ArgumentError, parser.to_s unless ARGV.size == 1 && !options[:current]
+    File.open(ARGV.first, "rb") do |file|
+      app = AppPackageImport.call(io: file, as_copy: options[:copy] == true)
+      puts "Installed #{app.id} (portable identity #{app.portable_id})"
+    end
+  else
+    raise ArgumentError, parser.to_s
+  end
+rescue ArgumentError, OptionParser::ParseError, AppPackageImport::Collision,
+    Rubellum::BlobStore::Invalid, Rubellum::BlobStore::Full, ActiveRecord::RecordNotFound,
+    ActiveRecord::RecordInvalid, SystemCallError => error
+  warn "Package operation failed: #{error.message}"
+  exit 1
+end

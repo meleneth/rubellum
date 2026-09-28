@@ -1,0 +1,15 @@
+%section.library
+  %p.eyebrow Portable projects
+  %h1 Import an app
+  %p.muted.mb-6 Import preserves notebook history and assets. It never runs notebook code or prepares dependencies.
+  - if @error
+    %p.panel.mb-6{role: "alert"}= @error
+  = form_with url: import_apps_path, multipart: true, class: "panel grid gap-4" do |form|
+    = form.label :package, "App package (.rubellum-app.tar.gz)"
+    = form.file_field :package, accept: ".gz,application/gzip", required: true
+    %p.muted.text-sm Up to 64 MiB compressed. App packages do not include live Ruby memory or recorded executions.
+    = form.label :as_copy, "If this app is already installed"
+    = form.select :as_copy, [["Cancel — keep the existing app unchanged", "false"], ["Import as copy — create an independent installation", "true"]]
+    .flex.gap-3
+      = form.submit "Import app", class: "primary-button"
+      = link_to "Cancel", root_path, class: "quiet-button"
