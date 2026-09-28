@@ -12,7 +12,7 @@ journal = Rubellum::RuntimeJournal.new(directory:)
 blobs = Rubellum::BlobStore.for_app(root:, app_id: scope.fetch("app_installation_id"))
 evaluator = Rubellum::EvaluatorProcess.new(workspace:, blob_directory: blobs.directory)
 transport = Rubellum::SqsTransport.local(endpoint: ENV.fetch("SQS_ENDPOINT", "http://127.0.0.1:4100"))
-agent = Rubellum::SessionAgent.new(scope:, journal:, evaluator:, transport:)
+agent = Rubellum::SessionAgent.new(scope:, journal:, evaluator:, transport:, payload_store: blobs)
 Signal.trap("TERM") { exit }
 begin
   until agent.stopped

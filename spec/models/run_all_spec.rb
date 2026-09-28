@@ -24,9 +24,10 @@ RSpec.describe RunAll, type: :model do
   end
 
   it "rolls back the whole batch if any cell cannot be queued" do
+    stub_const("Rubellum::ExecutionPayload::MAX_BYTES", 1024)
     add("ruby", "42")
     add("ruby", "x" * 70_000)
-    expect { described_class.call(notebook) }.to raise_error(Rubellum::Message::Invalid)
+    expect { described_class.call(notebook) }.to raise_error(Rubellum::ExecutionPayload::Invalid)
     expect(Execution.count).to eq(0)
     expect(OutboxMessage.count).to eq(0)
   end

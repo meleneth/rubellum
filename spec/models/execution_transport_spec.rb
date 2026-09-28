@@ -30,12 +30,13 @@ RSpec.describe "Durable execution transport", type: :model do
     expect(OutboxMessage.count).to eq(0)
   end
 
-  it "rolls back the execution and session sequence if its message exceeds the inline limit" do
+  it "stores larger command payloads by immutable digest without expanding the SQS envelope" do
     large = History.new(notebook).add_cell(cell_type: "ruby", source: "x" * 70_000, expected_notebook_revision: notebook.head_revision_id)
-    expect { ExecutionRequests.submit(notebook:, cell_id: large.id, expected_revision: large.head_revision_id) }.to raise_error(Rubellum::Message::Invalid, /size/)
-    expect(Execution.count).to eq(0)
-    expect(OutboxMessage.count).to eq(0)
-    expect(NotebookSession.count).to eq(0)
+    ExecutionRequests.submit(notebook:, cell_id: large.id, expected_revision: large.head_revision_id)
+    message = OutboxMessage.find_by!("envelope ->> 'kind' = 'execute'").envelope
+    expect(JSON.generate(message).bytesize).to be < 2048
+    payload = Rubellum::ExecutionPayload.unpack(message["payload"], store: AssetStorage.for_app(notebook.app))
+    expect(payload["source"]).to eq("x" * 70_000)
   end
 
   it "persists reordered events but advances status and acknowledgments only through contiguous sequences" do

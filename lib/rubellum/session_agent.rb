@@ -8,6 +8,7 @@ require_relative "sqs_transport"
 require_relative "evaluator_process"
 require_relative "runtime_events"
 require_relative "process_identity"
+require_relative "execution_payload"
 
 module Rubellum
   class SessionAgent
@@ -15,8 +16,9 @@ module Rubellum
     SCOPE_FIELDS = %w[app_installation_id notebook_id session_id generation].freeze
     attr_reader :stopped
 
-    def initialize(scope:, transport:, journal:, evaluator:, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) })
+    def initialize(scope:, transport:, journal:, evaluator:, payload_store: nil, clock: -> { Process.clock_gettime(Process::CLOCK_MONOTONIC) })
       @scope, @transport, @journal, @evaluator, @clock = JsonValue.copy(scope), transport, journal, evaluator, clock
+      @payload_store = payload_store
       @stopped = false
       if journal.state.empty?
         journal.update do |state|
@@ -47,19 +49,19 @@ module Rubellum
     def accept(message)
       return unless matches?(message)
       raise ProtocolError, "execution queue only accepts execute" unless message["kind"] == "execute"
-      payload = message["payload"]
+      sequence = message["sequence"].to_s
+      commands = @journal.state.fetch("commands")
+      if (previous = commands[sequence])
+        raise ProtocolError, "conflicting command sequence" unless previous.fetch("envelope") == message.to_h
+        return
+      end
+      payload = ExecutionPayload.unpack(message["payload"], store: @payload_store)
       unless payload["source"].is_a?(String) && Message::UUID.match?(payload["cell_id"].to_s) &&
           Message::UUID.match?(payload["cell_revision_id"].to_s) &&
           payload["source_digest"] == Digest::SHA256.hexdigest(payload["source"]) &&
           payload.fetch("inputs", {}).is_a?(Hash) && payload.fetch("datasets", {}).is_a?(Hash) &&
           (payload["batch_id"].nil? || Message::UUID.match?(payload["batch_id"].to_s))
         raise ProtocolError, "invalid execution payload or source digest"
-      end
-      sequence = message["sequence"].to_s
-      commands = @journal.state.fetch("commands")
-      if (previous = commands[sequence])
-        raise ProtocolError, "conflicting command sequence" unless previous.fetch("envelope") == message.to_h
-        return
       end
       raise ProtocolError, "duplicate execution with different command identity" if commands.values.any? { |item| item.fetch("envelope")["execution_id"] == message["execution_id"] }
       @journal.update do |state|
@@ -153,12 +155,12 @@ module Rubellum
         publish_latest
         return
       end
+      payload = ExecutionPayload.unpack(envelope.fetch("payload"), store: @payload_store)
       @journal.update do |state|
         state.fetch("commands").fetch(sequence)["state"] = "started"
         append_event(state, "execution_started", {}, @active_execution, envelope.fetch("message_id"))
       end
       replay
-      payload = envelope.fetch("payload")
       @evaluator.execute(source: payload.fetch("source"), cell_id: payload.fetch("cell_id"),
         inputs: payload.fetch("inputs", {}), datasets: payload.fetch("datasets", {}), tick: method(:tick)) do |kind, data|
         terminal = kind.start_with?("execution_")
@@ -170,6 +172,12 @@ module Rubellum
           end
         end
         publish_latest
+      end
+    rescue ExecutionPayload::Invalid => error
+      @journal.update(terminal: true) do |state|
+        append_event(state, "execution_cancelled", { "message" => "Execution payload unavailable before evaluation: #{error.message}" }, @active_execution, envelope.fetch("message_id"))
+        state.fetch("commands").fetch(sequence)["state"] = "execution_cancelled"
+        state["next_command"] += 1
       end
     rescue EvaluatorProcess::Lost, RuntimeJournal::Full => error
       @stopped = true

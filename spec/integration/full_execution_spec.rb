@@ -16,8 +16,12 @@ RSpec.describe "PostgreSQL → SQS → managed Ruby → SQS → PostgreSQL", typ
       manager = Rubellum::RunnerManager.new(root: directory, transport:)
       notebook = create(:notebook)
       source = 'puts "from Ruby"; File.write("result.txt", "immutable result"); Notebook.asset("result.txt"); File.write("result.txt", "changed scratch"); 6 * 7'
+      source = "#" + "large source " * 6000 + "\n" + source
       cell = History.new(notebook).add_cell(cell_type: "ruby", source:, expected_notebook_revision: notebook.head_revision_id)
       execution = ExecutionRequests.submit(notebook:, cell_id: cell.id, expected_revision: cell.head_revision_id)
+      command = OutboxMessage.find_by!("envelope ->> 'kind' = 'execute'").envelope
+      expect(command.fetch("payload")).to have_key("payload_ref")
+      expect(JSON.generate(command).bytesize).to be < 2048
       dispatcher = OutboxDispatcher.new(transport:)
       ingestor = EventIngestor.new
       Timeout.timeout(15) do

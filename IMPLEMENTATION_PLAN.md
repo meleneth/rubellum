@@ -52,6 +52,14 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- `bin/test spec/unit/execution_payload_spec.rb spec/unit/session_agent_spec.rb
+  spec/integration/full_execution_spec.rb spec/models/execution_transport_spec.rb
+  spec/models/run_all_spec.rb`: 26 examples, 0 failures. Large source and input
+  snapshots now use digest-verified app blobs with an 8 MiB encoded limit and a
+  32 KiB inline threshold. The real managed round trip executes >64 KiB source
+  with a <2 KiB SQS envelope and persists an artifact. Corrupt accepted payloads
+  cancel before evaluator invocation; duplicate acceptance does not reread bytes.
+
 - `bin/test spec/unit/artifact_writer_spec.rb spec/unit/notebook_api_spec.rb
   spec/integration/evaluator_process_spec.rb spec/integration/full_execution_spec.rb
   spec/models/artifacts_spec.rb`: 27 examples, 0 failures. `Notebook.asset` now

@@ -23,11 +23,13 @@ class ExecutionRequests
         "message_id" => SecureRandom.uuid, "kind" => "start", "sequence" => 1, "payload" => {}))
       OutboxMessage.enqueue(queue_name: Rubellum::QueueNames::MANAGER, message: start) if session.status == "requested"
       source = cell.head_revision.source
+      payload = { "cell_id" => cell.id, "cell_revision_id" => cell.head_revision_id,
+        "source" => source, "source_digest" => Digest::SHA256.hexdigest(source), "inputs" => inputs, "datasets" => datasets,
+        "batch_id" => batch_id }
+      payload = Rubellum::ExecutionPayload.pack(payload, store: AssetStorage.for_app(notebook.app))
       message = Rubellum::Message.new(session.scope_fields.merge("schema_version" => 1,
         "message_id" => SecureRandom.uuid, "execution_id" => execution.id, "kind" => "execute",
-        "sequence" => execution.sequence, "payload" => { "cell_id" => cell.id, "cell_revision_id" => cell.head_revision_id,
-          "source" => source, "source_digest" => Digest::SHA256.hexdigest(source), "inputs" => inputs, "datasets" => datasets,
-          "batch_id" => batch_id }))
+        "sequence" => execution.sequence, "payload" => payload))
       OutboxMessage.enqueue(queue_name: Rubellum::QueueNames.session(session.id, session.generation), message:)
       session.update!(next_command_sequence: session.next_command_sequence + 1)
       execution

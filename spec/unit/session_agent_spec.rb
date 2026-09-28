@@ -7,6 +7,7 @@ RSpec.describe Rubellum::SessionAgent do
   let(:evaluator) { instance_double(Rubellum::EvaluatorProcess, pid: nil) }
   let(:payload) { { "source" => "42", "source_digest" => Digest::SHA256.hexdigest("42"), "cell_id" => SecureRandom.uuid, "cell_revision_id" => SecureRandom.uuid } }
   let(:command) { build(:runner_message, **scope.symbolize_keys, payload:) }
+  let(:payload_store) { nil }
 
   around do |example|
     Dir.mktmpdir("rubellum-agent-") do |directory|
@@ -17,7 +18,7 @@ RSpec.describe Rubellum::SessionAgent do
     end
   end
 
-  let(:agent) { described_class.new(scope:, transport:, journal: @journal, evaluator:) }
+  let(:agent) { described_class.new(scope:, transport:, journal: @journal, evaluator:, payload_store:) }
 
   it "durably accepts and deduplicates without evaluating at acceptance" do
     expect(evaluator).not_to receive(:execute)
@@ -68,5 +69,25 @@ RSpec.describe Rubellum::SessionAgent do
   it "rejects a malformed batch identifier before acceptance" do
     message = build(:runner_message, **scope.symbolize_keys, payload: payload.merge("batch_id" => "not-a-uuid"))
     expect { agent.accept(message) }.to raise_error(described_class::ProtocolError)
+  end
+
+  context "with referenced command payloads" do
+    let(:payload_store) { instance_double(Rubellum::BlobStore) }
+    let(:reference) { { "sha256" => "a" * 64, "size" => JSON.generate(payload).bytesize } }
+    let(:command) { build(:runner_message, **scope.symbolize_keys, payload: { "payload_ref" => reference }) }
+
+    it "cancels before evaluation if an accepted payload subsequently becomes corrupt" do
+      expect(payload_store).to receive(:read).with(reference).ordered.and_return(JSON.generate(payload))
+      expect(payload_store).to receive(:read).with(reference).ordered.and_raise(Rubellum::BlobStore::Invalid, "corrupt")
+      allow(transport).to receive(:ensure_queue).and_return("queue")
+      allow(transport).to receive(:receive).and_return([])
+      allow(transport).to receive(:publish)
+      expect(evaluator).not_to receive(:execute)
+      agent.accept(command)
+      agent.accept(command)
+      agent.step
+      expect(@journal.state.fetch("commands").fetch("1")["state"]).to eq("execution_cancelled")
+      expect(@journal.state.fetch("events").map { |event| event["kind"] }).not_to include("execution_started")
+    end
   end
 end

@@ -2,6 +2,7 @@
 require "json"
 require "rbconfig"
 require_relative "message"
+require_relative "execution_payload"
 
 module Rubellum
   class EvaluatorProcess
@@ -29,7 +30,7 @@ module Rubellum
 
     def execute(source:, cell_id:, inputs: {}, datasets: {}, tick: -> {})
       request = JSON.generate({ source:, cell_id:, inputs:, datasets: }) + "\n"
-      raise ArgumentError, "evaluator command too large" if request.bytesize > Message::MAX_BYTES
+      raise ArgumentError, "evaluator command too large" if request.bytesize > ExecutionPayload::MAX_BYTES
       @commands.write(request)
       recorded = 0
       truncated = false

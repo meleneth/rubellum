@@ -3,6 +3,7 @@
 require "json"
 require_relative "../lib/rubellum/ruby_evaluator"
 require_relative "../lib/rubellum/artifact_writer"
+require_relative "../lib/rubellum/execution_payload"
 
 commands = IO.new(3, "r")
 events = IO.new(4, "w")
@@ -12,8 +13,8 @@ $stderr.sync = true
 artifact_writer = Rubellum::ArtifactWriter.new(store: Rubellum::BlobStore.new(directory: ARGV.fetch(0)), workspace: Dir.pwd) unless ARGV.empty?
 evaluator = Rubellum::RubyEvaluator.new(artifact_writer:)
 emit = ->(kind, payload) { events.puts(JSON.generate("kind" => kind, "payload" => payload)) }
-while (line = commands.gets(Rubellum::Message::MAX_BYTES + 1))
-  abort "evaluator command too large" if line.bytesize > Rubellum::Message::MAX_BYTES
+while (line = commands.gets(Rubellum::ExecutionPayload::MAX_BYTES + 1))
+  abort "evaluator command too large" if line.bytesize > Rubellum::ExecutionPayload::MAX_BYTES
   request = JSON.parse(line)
   result = evaluator.call(**request.transform_keys(&:to_sym), &emit)
   $stdout.flush

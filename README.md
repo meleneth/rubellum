@@ -215,7 +215,7 @@ requests blocked; a fully network-disabled appliance journey remains to be run.
 
 Still unfinished: portable app packages/import/export/duplicate,
 individual Markdown import/export and split preview, custom
-gem preparation, large payload references, coordinated backup/restore, richer
+gem preparation, coordinated backup/restore, richer
 diffs and editor controls, complete journal retention/pressure handling, and the
 remaining lifecycle/renderer/offline acceptance cases. No import/export or backup
 CLI is advertised before it actually exists.
