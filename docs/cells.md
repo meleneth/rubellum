@@ -87,13 +87,17 @@ contains `background`, `foreground`, and `accent` colors. D3 and the bootstrap
 are bundled locally. Renderer source is never evaluated in the main editor page.
 
 The iframe has `sandbox="allow-scripts"`, without same-origin access. Messages
-check the sending frame and a per-frame random token. It activates only through
+check the sending frame, a per-frame random token, and the current render request
+identifier. It activates only through
 Render chart; historical previews remain inert. Active charts refresh on inputs,
 output notifications, resize, and theme changes. Cleanup runs on replacement or
 navigation; obsolete async results release their cleanup when they finish.
+Obsolete promise failures cannot overwrite a newer render's status. A cleanup
+exception is shown locally but does not prevent rendering the replacement chart.
 Authored timers/simulations/listeners must be stopped by the authored cleanup
 function. Exceptions are shown at the cell, not injected as page HTML.
 
 This boundary is intended for trusted-owner code, not hostile-code isolation.
-Comprehensive cancellation/error race coverage and a hard bound on renderer CPU
-are not implemented.
+Chrome tests cover obsolete async success/failure, message identity checks,
+cleanup exceptions, resize/theme refresh and Turbo navigation cleanup. A hard
+bound on renderer CPU is not implemented; user code must yield to the browser.

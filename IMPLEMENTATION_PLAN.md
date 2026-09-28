@@ -53,6 +53,14 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- D3 lifecycle regression reproduced an obsolete promise rejection overwriting a
+  newer chart's status. Frame/controller now fence requests and errors by render
+  identity, release late cleanup, and continue after cleanup exceptions.
+  `npm run build` passes; `bin/test spec/system/renderer_lifecycle_spec.rb`:
+  5 examples, 0 failures (seed 58824), including real-frame identity checks,
+  null exceptions, resize/theme refresh and Turbo navigation cleanup. The first
+  two lifecycle cases plus existing authoring passed together: 6 examples.
+
 - `npm run build` and metadata regression suite: 34 examples, 0 failures (seed
   9463). Includes history/app-history model specs, app-history/notebook-metadata
   request specs, and both new Chrome metadata-history journeys. App metadata
