@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+require_relative "../config/boot"
+require_relative "../lib/rubellum/runner_manager"
+
+transport = Rubellum::SqsTransport.local(endpoint: ENV.fetch("SQS_ENDPOINT", "http://127.0.0.1:4100"))
+manager = Rubellum::RunnerManager.new(root: ENV.fetch("RUBELLUM_DATA", "/data"), transport:)
+Signal.trap("TERM") { exit }
+begin
+  loop do
+    manager.step
+    sleep 0.1
+  end
+ensure
+  manager.close
+end

@@ -60,6 +60,12 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- `bin/test spec/integration/full_execution_spec.rb`: 1 example, 0 failures.
+  Real PostgreSQL request/outbox → GoAWS → manager-owned agent and clean Ruby
+  evaluator → GoAWS → PostgreSQL result, including durable event acknowledgment
+  and journal compaction. Manager service entry points are wired into s6; this
+  expanded image still needs a fresh build/boot verification.
+
 - AMD64 appliance image builds. `bin/test spec/appliance/boot_spec.rb`: 2 examples,
   0 failures: fresh boot, only one published HTTP port, PostgreSQL/Redis/secret
   persistence through restart and replacement, clean PostgreSQL shutdown, fatal

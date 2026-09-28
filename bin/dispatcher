@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+require_relative "../config/environment"
+Signal.trap("TERM") { exit }
+dispatcher = OutboxDispatcher.new
+loop do
+  begin
+    dispatcher.call
+  rescue Aws::SQS::Errors::ServiceError, Seahorse::Client::NetworkingError => error
+    warn "[dispatcher] broker unavailable: #{error.class}"
+  end
+  sleep 0.2
+end

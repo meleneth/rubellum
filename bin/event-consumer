@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+require_relative "../config/environment"
+Signal.trap("TERM") { exit }
+transport = Rubellum::SqsTransport.local(endpoint: ENV.fetch("SQS_ENDPOINT", "http://127.0.0.1:4100"))
+ingestor = EventIngestor.new
+loop do
+  begin
+    queue = transport.ensure_queue(Rubellum::QueueNames::EVENTS)
+    transport.receive(queue, wait_seconds: 1).each do |delivery|
+      ingestor.call(delivery.message)
+      transport.delete(queue, delivery)
+    end
+  rescue Aws::SQS::Errors::ServiceError, Seahorse::Client::NetworkingError => error
+    warn "[event-consumer] broker unavailable: #{error.class}"
+    sleep 0.2
+  end
+end
