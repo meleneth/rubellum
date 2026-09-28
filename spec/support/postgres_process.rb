@@ -8,7 +8,7 @@ class PostgresProcess
     @directory = Dir.mktmpdir("rubellum-postgres-")
     local = File.expand_path("../../tmp/tools/postgresql/usr/lib/postgresql/17/bin", __dir__)
     @bin = ENV.fetch("POSTGRES_BIN", File.executable?("#{local}/initdb") ? local : "/usr/lib/postgresql/17/bin")
-    run("initdb", "-D", "#{directory}/cluster", "-U", "rubellum", "--auth-local=trust", "--no-locale")
+    run("initdb", "-D", "#{directory}/cluster", "-U", "rubellum", "--auth-local=trust", "--no-locale", "--encoding=UTF8")
     run("pg_ctl", "-D", "#{directory}/cluster", "-l", "#{directory}/postgres.log", "-w", "start",
       "-o", "-k #{directory} -c listen_addresses='' -c fsync=on")
     @running = true

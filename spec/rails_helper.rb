@@ -12,7 +12,9 @@ ENV["PGUSER"] = "rubellum"
 ENV["PGDATABASE"] = "rubellum"
 require_relative "../config/environment"
 require "rspec/rails"
+Dir[File.join(__dir__, "rails_factories", "*.rb")].sort.each { |file| require file }
 
+ActiveRecord::Migration.verbose = false
 ActiveRecord::MigrationContext.new(Rails.root.join("db/migrate")).migrate
 
 RSpec.configure do |config|

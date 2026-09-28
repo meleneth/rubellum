@@ -1,0 +1,6 @@
+class CellRevision < ImmutableRevision
+  TYPES = %w[markdown ruby d3 data table parameters].freeze
+  belongs_to :cell
+  validates :cell_type, inclusion: { in: TYPES }
+  validates :source, length: { maximum: 1_048_576 }
+end
