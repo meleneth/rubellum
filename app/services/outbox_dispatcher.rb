@@ -8,9 +8,9 @@ class OutboxDispatcher
       queue = @transport.ensure_queue(record.queue_name)
       @transport.publish(queue, Rubellum::Message.new(record.envelope))
       # ACKs are recreated on duplicate event delivery; commands stay outstanding
-      # until a committed acceptance fact arrives.
+      # until acceptance (execution) or a terminal fact (interrupt) is committed.
       attributes = { sent_at: @clock.call }
-      attributes[:confirmed_at] = @clock.call if %w[acknowledge interrupt].include?(record.envelope.fetch("kind"))
+      attributes[:confirmed_at] = @clock.call if record.envelope.fetch("kind") == "acknowledge"
       record.update!(attributes)
     end
   end

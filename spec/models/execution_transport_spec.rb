@@ -82,6 +82,41 @@ RSpec.describe "Durable execution transport", type: :model do
     expect(OutboxMessage.where(confirmed_at: nil).count).to eq(2)
   end
 
+  it "retries interrupts until a contiguous terminal fact is committed, not merely sent" do
+    ingestor.call(event("execution_started", sequence: 1))
+    request = ExecutionRequests.interrupt(execution)
+    transport = instance_double(Rubellum::SqsTransport)
+    allow(transport).to receive(:ensure_queue).and_return("queue")
+    sent = []
+    allow(transport).to receive(:publish) { |_, message| sent << message if message["kind"] == "interrupt" }
+    now = Time.current
+    dispatcher = OutboxDispatcher.new(transport:, clock: -> { now })
+    dispatcher.call
+    expect(request.reload.sent_at).not_to be_nil
+    expect(request.confirmed_at).to be_nil
+    now += 6
+    dispatcher.call
+    expect(sent.map { |message| message["message_id"] }).to eq([request.id, request.id])
+    finished = event("execution_interrupted", sequence: 3)
+    ingestor.call(finished)
+    expect(request.reload.confirmed_at).to be_nil
+    ingestor.call(event("stdout", sequence: 2, payload: { "text" => "before interrupt" }))
+    expect(request.reload.confirmed_at).not_to be_nil
+    expect(execution.reload.status).to eq("interrupted")
+  end
+
+  it "resolves outstanding interrupts when their generation is declared stopped" do
+    request = ExecutionRequests.interrupt(execution)
+    ingestor.call(event("runner_stopped", sequence: 1))
+    expect(request.reload.confirmed_at).not_to be_nil
+    expect(execution.reload.status).to eq("cancelled")
+  end
+
+  it "does not enqueue interrupts for executions already known to be terminal" do
+    ingestor.call(event("execution_completed", sequence: 1))
+    expect { ExecutionRequests.interrupt(execution) }.not_to change(OutboxMessage, :count)
+  end
+
   it "prevents relabeling a recorded execution with different input values through SQL" do
     execution
     expect { ApplicationRecord.transaction(requires_new: true) { execution.update_columns(inputs: { "scale" => 99 }) } }

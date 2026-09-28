@@ -38,10 +38,13 @@ class ExecutionRequests
 
   def self.interrupt(execution)
     session = execution.notebook_session
-    message = Rubellum::Message.new(session.scope_fields.merge("schema_version" => 1,
-      "message_id" => SecureRandom.uuid, "execution_id" => execution.id, "generation" => execution.generation,
-      "kind" => "interrupt", "sequence" => execution.sequence, "payload" => {}))
-    OutboxMessage.enqueue(queue_name: Rubellum::QueueNames.session(session.id, execution.generation, control: true), message:)
+    session.with_lock do
+      return if execution.reload.terminal?
+      message = Rubellum::Message.new(session.scope_fields.merge("schema_version" => 1,
+        "message_id" => SecureRandom.uuid, "execution_id" => execution.id, "generation" => execution.generation,
+        "kind" => "interrupt", "sequence" => execution.sequence, "payload" => {}))
+      OutboxMessage.enqueue(queue_name: Rubellum::QueueNames.session(session.id, execution.generation, control: true), message:)
+    end
   end
 
   def self.reset(session)

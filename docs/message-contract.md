@@ -67,7 +67,10 @@ loss across GoAWS restart. Broker IDs are not application message identities.
 No FIFO, durability, ordering, or hosted AWS guarantees are assumed. Recreating
 queues and republishing retained commands/events is implemented through a
 PostgreSQL outbox, bounded fsynced runner journals, and contiguous acknowledgments.
-Complete disk-pressure/retention and control-reconciliation cases remain unfinished.
+Interrupt requests remain outstanding across sends and broker restart until a
+contiguous terminal execution fact or generation-stopped fact is committed.
+Requests against an already terminal execution do not enqueue new controls.
+Complete disk-pressure/retention and lifecycle reconciliation remain unfinished.
 
 Use `config/goaws.yml`. Keep GoAWS's `Region` empty: a nonempty value is prefixed
 to `Host` in queue URLs, making a loopback IP invalid. The Ruby SDK uses

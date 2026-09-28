@@ -53,6 +53,19 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Interrupt delivery regression: `bin/test spec/models/execution_transport_spec.rb
+  spec/integration/interrupt_recovery_spec.rb`: 13 examples, 0 failures (seed
+  50237). SendMessage no longer confirms interruption. A deterministic real
+  agent pause/broker restart loses the first notification; retry interrupts the
+  original evaluator without replaying its side effect or changing generation.
+  Confirmation waits for contiguous durable terminal/stopped facts.
+
+- History/D3/Markdown milestone: full non-appliance suite 321 examples, 0 failures
+  (seed 63428), Ruby line coverage 94.85% / branch 79.21%. AMD64 development image
+  rebuild succeeds; appliance suite 3 examples, 0 failures (seed 64899), including
+  persistence, fatal-service handling, browser execution and fresh-volume package
+  import. Registry tags still identify the previously published release candidate.
+
 - Markdown draft edit/preview/split modes: `npm run build` and `bin/test
   spec/requests/markdown_preview_spec.rb spec/system/markdown_preview_spec.rb
   spec/system/authoring_spec.rb`: 8 examples, 0 failures (seed 23824). Real Chrome

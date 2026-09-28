@@ -47,7 +47,7 @@ class EventIngestor
       session.update!(status: "lost") if current
       session.executions.where(generation: envelope.fetch("generation"), status: "running").update_all(status: "unknown")
       session.executions.where(generation: envelope.fetch("generation"), status: %w[queued accepted]).update_all(status: "cancelled")
-      OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND (envelope ->> 'generation')::integer = ? AND envelope ->> 'kind' IN ('start', 'execute')", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)
+      OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND (envelope ->> 'generation')::integer = ? AND envelope ->> 'kind' IN ('start', 'execute', 'interrupt')", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)
     elsif (execution_id = envelope["execution_id"])
       execution = session.executions.find_by!(id: execution_id, generation: envelope.fetch("generation"))
       AssetStorage.register_artifact(execution:, event: RunnerEvent.find(envelope.fetch("message_id"))) if kind == "artifact"
@@ -55,6 +55,10 @@ class EventIngestor
         "execution_failed" => "failed", "execution_interrupted" => "interrupted", "execution_cancelled" => "cancelled", "execution_unknown" => "unknown" }[kind]
       if status && !execution.terminal?
         execution.update!(status:, result: envelope.fetch("payload"))
+      end
+      if execution.terminal?
+        OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'kind' = 'interrupt' AND envelope ->> 'session_id' = ? AND envelope ->> 'execution_id' = ? AND (envelope ->> 'generation')::integer = ?",
+          session.id, execution.id, execution.generation).update_all(confirmed_at: Time.current)
       end
       if kind == "execution_accepted"
         OutboxMessage.where(id: envelope["command_id"]).update_all(confirmed_at: Time.current)
