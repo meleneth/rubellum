@@ -52,6 +52,12 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Immutable blob-store foundation: `bin/test spec/unit/blob_store_spec.rb`:
+  10 examples, 0 failures. SHA-256 addresses, fsynced atomic publication,
+  deduplication without overwrite, corruption/size validation, app namespaces,
+  temporary-write recovery, 25 MiB per blob and 512 MiB per app defaults.
+  No deletion/GC API; retained bytes are never evicted to make room.
+
 - `docker build -t rubellum:dev .` and `bin/test spec/appliance/boot_spec.rb`:
   latest expanded AMD64 image builds; all 3 examples pass together (73 seconds).
   Fresh boot, PostgreSQL/Redis/secret persistence through restart and replacement,
