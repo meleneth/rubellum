@@ -20,6 +20,12 @@ Implemented helper methods:
   16 KiB per inline output. Arbitrary Ruby objects and nonfinite numbers fail.
 - `Notebook.display(text, mime: "text/plain")`: bounded text display.
 
-Artifact persistence, app bundles, lifecycle ownership, durable messaging,
-interrupt escalation and browser rendering are still separate implementation work.
-There is no artifact helper pretending to persist files before that facility exists.
+The manager owns agents; an agent owns the clean evaluator and fsynced journal.
+Commands/results cross SQS in both directions. Interrupts have a two-second grace
+period before evaluator process-group termination. Lost state is not replayed.
+Run all batches stop after failure/interruption; later explicit runs are separate.
+
+Artifact persistence and custom app bundles are not yet implemented. There is no
+artifact helper pretending to persist files before that facility exists. The
+clean evaluator can use Ruby's available standard/default libraries; gems loaded
+by Rails are not automatically available to notebook code.

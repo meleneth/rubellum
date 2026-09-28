@@ -5,7 +5,7 @@ in small tested commits. Checkboxes mean verified behavior, not files created.
 
 ## Delivery checkpoints
 
-- [ ] 1. Appliance foundation: pinned compatible dependencies, RSpec harness,
+- [x] 1. Appliance foundation: pinned compatible dependencies, RSpec harness,
   versioned message contract, real GoAWS SDK verification, PostgreSQL and s6 boot,
   smallest Ruby command/result round trip through SQS.
 - [ ] 2. App/notebook/cell model: storage-enforced immutable revisions and assets,
@@ -33,10 +33,41 @@ an incomplete checkpoint complete.
 - Starting repository: one build brief, no application code; clean `main` at
   `b4ae31b` on 2026-09-28.
 - Host: AMD64, Ruby 4.0.6, Bundler 4.0.16, Node 24.21.0, Docker available.
-- No unresolved product decision blocks the first checkpoint.
+- No unresolved product decision currently blocks implementation.
 - Pinned Ruby 4.0.6, Rails 8.1.4 (declares Ruby >= 3.2), AWS SDK SQS 1.119.0,
-  GoAWS 0.5.4. Real SDK/broker interoperability is verified; Rails boot remains
-  to be verified.
+  GoAWS 0.5.4. Real SDK/broker interoperability and Rails production boot are
+  verified, including a real container-to-browser execution/reset path.
+
+## Next concrete work
+
+1. Immutable asset/payload storage and the real artifact helper; large command
+   payload references, digest validation, history-safe retention and size limits.
+2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
+   descendant cleanup tests, durable control reconciliation, complete journal
+   pressure handling, and explicit Restart-and-run-all.
+3. Finish authoring affordances and renderer lifecycle coverage; portable archive
+   schema, inert validated import/export/copy, and explicit dependency preparation.
+4. Coordinated backup/restore into a fresh volume, full offline acceptance, and
+   remaining public-path fixture journeys. ARM64 remains unverified.
+
+## Latest verification
+
+- `docker build -t rubellum:dev .` and `bin/test spec/appliance/boot_spec.rb`:
+  latest expanded AMD64 image builds; all 3 examples pass together (73 seconds).
+  Fresh boot, PostgreSQL/Redis/secret persistence through restart and replacement,
+  critical-service fatal exit, and browser-driven saved Ruby execution/context
+  reset are verified. Generated test containers and volumes are cleaned up.
+
+- `bin/test spec/unit spec/models spec/requests spec/integration spec/system`:
+  209 examples, 0 failures. Line coverage 91.29%; branch coverage 73.74% for the
+  tracked Ruby code in this run (not a browser JavaScript coverage claim).
+- `bin/test spec/unit/documentation_spec.rb`: 3 examples, 0 failures. The README
+  Ruby example runs and returns 36 with the documented structured output; the
+  parameter example validates and local README links resolve.
+- README now covers actual startup, persistence, Redis, first-notebook usage,
+  editing/execution semantics, development/test prerequisites, safety boundaries,
+  troubleshooting and concrete remaining limitations. Added cell/renderer docs;
+  corrected stale operations/evaluator descriptions.
 
 ## Verification ledger
 
@@ -58,7 +89,7 @@ an incomplete checkpoint complete.
   lines, 93.75% branches for the current small library. This does not yet prove
   durable reconciliation, generation fencing, or a Ruby execution round trip.
 
-## Next concrete work
+## Incremental verification history
 
 - Run all now persists a shared immutable batch identity, captures one notebook/
   input snapshot, and cancels remaining batch cells after failure/interruption.
@@ -99,8 +130,8 @@ an incomplete checkpoint complete.
 - `bin/test spec/integration/full_execution_spec.rb`: 1 example, 0 failures.
   Real PostgreSQL request/outbox → GoAWS → manager-owned agent and clean Ruby
   evaluator → GoAWS → PostgreSQL result, including durable event acknowledgment
-  and journal compaction. Manager service entry points are wired into s6; this
-  expanded image still needs a fresh build/boot verification.
+  and journal compaction. At this checkpoint the manager service entry points
+  were wired into s6 but the expanded image had not yet been boot-tested.
 
 - AMD64 appliance image builds. `bin/test spec/appliance/boot_spec.rb`: 2 examples,
   0 failures: fresh boot, only one published HTTP port, PostgreSQL/Redis/secret
@@ -113,15 +144,13 @@ an incomplete checkpoint complete.
 - Evaluator and helper API implemented and tested with real subprocesses:
   persistent variables/methods/requires, distinct contexts, separated stdout and
   protocol, bounded output, strict JSON helpers, cell-local errors and unknown
-  abrupt exits. No application execution path is claimed yet.
+  abrupt exits. At that checkpoint no application execution path was claimed.
 
 - Rails 8.1.4 boots on Ruby 4.0.6. Three request specs pass against temporary
   PostgreSQL 17.11 and GoAWS processes, including dependency-failure readiness.
   PostgreSQL test fixtures never use an existing host database. The host lacked
   server binaries; an extracted Debian PostgreSQL package supplies them locally.
 
-Continue checkpoint 1 with PostgreSQL/s6 appliance boot and the smallest Ruby
-execution/result path, using the verified SDK and broker configuration. Keep
-durable acceptance, clean evaluator exec, and explicit process ownership in scope
-as the execution path develops. Do not interpret the transport tests as proof of
-the reliability requirements or any complete application acceptance criterion.
+Passing individual transport tests is not proof of all reliability requirements.
+Only checkpoint 1 is complete; the unchecked checkpoints retain the full scope
+of the build brief, including missing asset, portability and operational work.

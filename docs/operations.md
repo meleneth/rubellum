@@ -6,10 +6,11 @@ are checksum checked. ARM64 build paths exist but are not verified yet.
 
 s6 starts `prepare`, then PostgreSQL, Redis and GoAWS. Readiness oneshots check
 the running dependencies, create the application database/role once, and allow
-schema migration. Web starts only after migration succeeds. Startup failure
-stops the container. Unexpected web/PostgreSQL/Redis exit stops the container;
-GoAWS may restart under supervision (durable runner reconciliation is upcoming).
-The dependency graph stops web before databases on shutdown. PostgreSQL gets a
+schema migration. Manager, dispatcher, and event consumer start after migration;
+web depends on those workers. Startup failure stops the container. Unexpected
+web/worker/PostgreSQL/Redis exit stops the container. GoAWS may restart under
+supervision; workers recreate queues and replay outstanding durable messages.
+The dependency graph stops web before workers and databases on shutdown. PostgreSQL gets a
 fast shutdown signal and 15 seconds to stop. Use `docker stop --time 30 rubellum`.
 
 `/data` holds `postgres`, `redis`, `config`, `apps`, `bundles`, `runtime`, and
@@ -21,6 +22,9 @@ An unexpected PostgreSQL major fails startup rather than overwriting the cluster
 Verified: fresh-volume boot; HTTP readiness; PostgreSQL/Redis data and Rails
 secret survive restart and same-image container replacement; critical Redis
 failure exits the container with a nonzero status; clean database shutdown.
+The real container/browser path also verifies saved Ruby execution, persistent
+values between runs, stdout, Cable subscription, and reset into a fresh generation.
+Readiness currently tests dependency connectivity, not hung-worker heartbeats.
 
 Whole-instance backup/restore and cross-version upgrade commands are not yet
 implemented. Do not treat copying a live database directory as a backup. Until
