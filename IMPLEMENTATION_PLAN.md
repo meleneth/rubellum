@@ -60,6 +60,16 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- Expanded AMD64 image builds with Haml, local frontend assets and supervised
+  workers. Appliance persistence/fatal-exit checks pass; the new real Chrome →
+  Rails → SQS workers → Rails/Chrome execution and reset example passes separately
+  (`bin/test spec/appliance/boot_spec.rb -e 'executes saved Ruby'`: 1 example).
+  It verifies persistent Ruby values, stdout, a connected Cable subscription and
+  reset into generation 2. Production boot exposed a missing Active Job railtie;
+  `EAGER_LOAD=1 bin/test spec/requests/authoring_spec.rb`: 9 examples, 0 failures
+  after the fix. The first browser fixture itself had a Ruby local-variable bug;
+  correcting it allowed the execution journey to pass.
+
 - `bin/test spec/models/execution_updates_spec.rb spec/system/authoring_spec.rb`:
   4 examples, 0 failures in real Chrome 154. Browser evidence: public create/edit/
   save/recover, local highlighted Markdown, table filtering, explicit iframe D3,
