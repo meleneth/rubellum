@@ -52,6 +52,12 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- `bin/test spec/unit/package_manifest_spec.rb spec/models/app_package_export_spec.rb`:
+  12 examples, 0 failures. Versioned machine validation and full/current export
+  preserve immutable history/assets, remap portable references and emit readable
+  source files without sessions/executions. Public package import/export remains
+  in progress; schema and limits are documented in `docs/app-packages.md`.
+
 - `bin/test spec/unit/package_archive_spec.rb`: 9 examples, 0 failures. The
   inert tar/gzip container layer rejects traversal, links/devices/extensions,
   duplicate/conflicting paths, corrupt checksums, truncation and concatenated
