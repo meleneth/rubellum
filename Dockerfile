@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY app/javascript app/javascript
+COPY config/palettes config/palettes
 COPY app/assets app/assets
 COPY app/views app/views
 RUN npm run build

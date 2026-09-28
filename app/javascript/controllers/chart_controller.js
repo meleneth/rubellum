@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import palette from "../../../config/palettes/lospec500.json";
 
 export default class extends Controller {
   static targets = ["frame", "status"];
@@ -26,7 +27,10 @@ export default class extends Controller {
       if (!response.ok) throw new Error(await response.text());
       const result = await response.json();
       if (!this.active || !this.ready || renderId !== this.renderSequence || !this.element.isConnected) return;
-      const theme = document.documentElement.dataset.theme === "dark" ? {background: "#161b22", foreground: "#e9edf2", accent: "#f6a66b"} : {background: "#ffffff", foreground: "#242d3a", accent: "#b64f29"};
+      const styles = getComputedStyle(document.documentElement);
+      const color = token => styles.getPropertyValue(token).trim().toLowerCase()
+        .replace(/^#([\da-f])([\da-f])([\da-f])$/, "#$1$1$2$2$3$3");
+      const theme = {background: color("--panel"), foreground: color("--ink"), accent: color("--accent"), palette: palette.colors};
       this.frameTarget.contentWindow.postMessage({type: "render", token: this.token, renderId, source: this.sourceValue, data: result.data, inputs: result.inputs, width: this.frameTarget.clientWidth, height: this.frameTarget.clientHeight, theme}, "*");
       this.statusTarget.textContent = `${result.stale ? "Stale result · " : ""}Revision ${result.provenance.revision_id.slice(0, 8)}${result.provenance.execution_id ? ` · execution ${result.provenance.execution_id.slice(0, 8)}` : ""}`;
     } catch (error) { if (error.name !== "AbortError" && this.active && renderId === this.renderSequence) this.statusTarget.textContent = error.message; }

@@ -8,6 +8,10 @@ One Docker image. One container. One persistent `/data` volume. One HTTP port.
 PostgreSQL, GoAWS, Redis, Rails, and notebook workers are bundled—no Compose,
 external AWS account, hosted service, runtime CDN, or Docker socket required.
 
+Both light and dark themes use the [Lospec500 palette](https://lospec.com/palette-list/lospec500),
+including editor syntax, search/selection states, controls and built-in charts.
+The palette is bundled locally; no runtime request to Lospec is required.
+
 **Under active development.** The authoring and execution paths work, but the
 full product contract is not complete. Custom gem environments and coordinated
 backup/restore are not ready.

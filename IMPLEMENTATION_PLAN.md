@@ -54,6 +54,16 @@ an incomplete checkpoint complete.
 
 ## Latest verification
 
+- Lospec500 palette enforcement: canonical 42-color list bundled locally, strict
+  AGENTS requirement, semantic light/dark tokens, palette-only editor syntax/UI,
+  native controls and chart theme. `npm run build` passes. Palette + renderer
+  browser suite: 9 examples, 0 failures (seed 16354); expanded palette/autocomplete
+  suite: 5 examples, 0 failures (seed 24008). Unit guards reject off-palette
+  literals/blends and verify 4.5:1 text/button and 3:1 boundary contrast. Chrome
+  checks actual computed UI colors, search/selection/completion, iframe chart
+  colors and preserved editor identity across light/dark switches. User-authored
+  notebook source and imported assets are not rewritten.
+
 - Public restart-and-run-all: full non-appliance suite 342 examples, 0 failures
   (seed 1775); rebuilt AMD64 image `308a8c6fde14` passes all 3 appliance examples
   (seed 22869), including browser restart-and-run-all into generation 3. Additional

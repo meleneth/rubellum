@@ -161,7 +161,7 @@ RSpec.describe "D3 lifecycle in Chrome", type: :system do
     end
     find('button[aria-label="Toggle light and dark theme"]').click
     within_frame(@frame) do
-      next_background = background == "#ffffff" ? "#161b22" : "#ffffff"
+      next_background = background == "#ffffff" ? "#2c1e31" : "#ffffff"
       expect(page).to have_css("#chart > div[data-background='#{next_background}']")
     end
     released = page.evaluate_script("document.documentElement.dataset.rendererCleanups")

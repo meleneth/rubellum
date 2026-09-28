@@ -20,6 +20,8 @@ window.addEventListener("message", async event => {
     const {source, data, inputs, width, height, theme} = event.data;
     if (typeof source !== "string" || !Number.isFinite(width) || !Number.isFinite(height) || !theme || typeof theme !== "object") throw new Error("Invalid renderer message");
     const element = document.createElement("div");
+    document.body.style.background = theme.background;
+    document.body.style.color = theme.foreground;
     element.style.color = theme.foreground; element.style.background = theme.background;
     document.getElementById("chart").replaceChildren(element);
     const render = new Function(`${source}\n;return render;`)();

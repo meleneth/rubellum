@@ -92,7 +92,9 @@ async function render({ element, d3, data, inputs, width, height, theme }) {
 ```
 
 Source defines `render`; it may return nothing or a cleanup function. `theme`
-contains `background`, `foreground`, and `accent` colors. D3 and the bootstrap
+contains `background`, `foreground`, and `accent` semantic colors, plus `palette`,
+the complete 42-color Lospec500 array. Use these colors for built-in charts in
+both light and dark themes. D3 and the bootstrap
 are bundled locally. Renderer source is never evaluated in the main editor page.
 
 The iframe has `sandbox="allow-scripts"`, without same-origin access. Messages

@@ -34,6 +34,8 @@ contract; the plan records progress, not a reduced scope.
   values, default Tailwind palettes, gradients, opacity blends, or third-party
   theme colors outside Lospec500. Transparent surfaces, inheritance and
   `currentColor` are permitted; antialiasing is not a new authored color.
+- The canonical list is `config/palettes/lospec500.json`; semantic tokens live in
+  `app/assets/stylesheets/application.css`. Charts receive them through `theme`.
 - Override third-party UI defaults and add RSpec palette/contrast regression
   coverage when changing themes or components. Keep bundled charts on the same
   theme tokens. Do not rewrite the owner's imported assets or notebook source

@@ -5,6 +5,7 @@ import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { javascript } from "@codemirror/lang-javascript";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
+import { editorTheme } from "../editor_theme";
 
 export default class extends Controller {
   static targets = ["source", "mount", "identity", "status", "recover", "workspace", "preview", "previewStatus", "modeButton"];
@@ -18,7 +19,7 @@ export default class extends Controller {
     const languages = {ruby: () => StreamLanguage.define(ruby), markdown, d3: javascript, data: json, parameters: json};
     let language = languages[this.languageValue]?.() || [];
     try { if (JSON.parse(this.element.elements.configuration.value).format === "csv") language = []; } catch (_) {}
-    this.view = new EditorView({doc: this.sourceTarget.value, parent: this.mountTarget, extensions: [basicSetup, language,
+    this.view = new EditorView({doc: this.sourceTarget.value, parent: this.mountTarget, extensions: [basicSetup, language, editorTheme,
       EditorView.updateListener.of(update => { if (update.docChanged) this.changed(); }),
       EditorView.contentAttributes.of({"aria-label": "Cell source"})]});
     this.sourceTarget.hidden = true;
