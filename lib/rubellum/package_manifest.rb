@@ -38,10 +38,20 @@ module Rubellum
       encoded = files.fetch("manifest.json") { raise Invalid, "Missing manifest.json" }
       raise Invalid, "Manifest exceeds limit" if encoded.bytesize > MAX_BYTES
       manifest = JsonValue.copy(JSON.parse(encoded, object_class: UniqueObject, max_nesting: 32))
+      validate_strings!(manifest)
       new(manifest, files).validate!
       manifest
     rescue JSON::ParserError, JsonValue::Invalid => error
       raise Invalid, error.message
+    end
+
+    def self.validate_strings!(value)
+      case value
+      when Hash then value.each { |key, item| validate_strings!(key); validate_strings!(item) }
+      when Array then value.each { |item| validate_strings!(item) }
+      when String
+        raise Invalid, "NUL bytes cannot be stored in app metadata" if value.include?("\0")
+      end
     end
 
     def initialize(manifest, files)
@@ -51,7 +61,9 @@ module Rubellum
 
     def validate!
       object!(@manifest, %w[format_version cell_api_version mode app notebooks cells assets files])
-      fail!("Unsupported package or cell API version") unless @manifest["format_version"] == 1 && @manifest["cell_api_version"] == 1
+      unless %w[format_version cell_api_version].all? { |key| @manifest[key].is_a?(Integer) && @manifest[key] == 1 }
+        fail!("Unsupported package or cell API version")
+      end
       fail!("Invalid export mode") unless %w[full current].include?(@manifest["mode"])
       array!(@manifest["notebooks"])
       array!(@manifest["cells"])
@@ -183,7 +195,7 @@ module Rubellum
       inventory.each do |path, reference|
         object!(reference, %w[sha256 size])
         bytes = @files.fetch(path)
-        fail!("File checksum mismatch") unless reference["size"] == bytes.bytesize && reference["sha256"] == Digest::SHA256.hexdigest(bytes)
+        fail!("File checksum mismatch") unless reference["size"].is_a?(Integer) && reference["size"] == bytes.bytesize && reference["sha256"] == Digest::SHA256.hexdigest(bytes)
       end
     end
 

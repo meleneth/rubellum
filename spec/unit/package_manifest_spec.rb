@@ -28,7 +28,7 @@ RSpec.describe Rubellum::PackageManifest do
 
   it "rejects unsupported versions, unknown fields and oversized manifests" do
     [manifest.merge("format_version" => 2), manifest.merge("cell_api_version" => 2),
-      manifest.merge("mode" => "merge"), manifest.merge("secrets" => {})].each do |invalid|
+      manifest.merge("format_version" => 1.0), manifest.merge("mode" => "merge"), manifest.merge("secrets" => {})].each do |invalid|
       expect { load_manifest(invalid) }.to raise_error(described_class::Invalid)
     end
     expect { described_class.load("manifest.json" => " " * (described_class::MAX_BYTES + 1)) }
@@ -83,5 +83,21 @@ RSpec.describe Rubellum::PackageManifest do
     revision["created_at"] = "yesterday"
     redigest
     expect { load_manifest }.to raise_error(described_class::Invalid)
+  end
+
+  it "rejects NUL metadata before staging or PostgreSQL JSONB insertion" do
+    revision["configuration"] = { "settings" => [{ "name" => "bad\0value" }] }
+    redigest
+    expect { load_manifest }.to raise_error(described_class::Invalid, /NUL/)
+  end
+
+  it "reports malformed owner/revision shapes as validation errors" do
+    [nil, true, 42, "text", [], {}].each do |bad|
+      expect { load_manifest(manifest.merge("app" => bad)) }.to raise_error(described_class::Invalid)
+      changed = Marshal.load(Marshal.dump(manifest))
+      changed["mode"] = "current"
+      changed["app"]["revisions"] = [bad]
+      expect { load_manifest(changed) }.to raise_error(described_class::Invalid)
+    end
   end
 end
