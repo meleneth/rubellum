@@ -1,3 +1,12 @@
+FROM node:24.21.0-slim AS assets
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY app/javascript app/javascript
+COPY app/assets app/assets
+COPY app/views app/views
+RUN npm run build
+
 FROM ruby:4.0.6-slim-trixie AS base
 ENV BUNDLE_PATH=/usr/local/bundle RAILS_ENV=production \
     PATH=/usr/lib/postgresql/17/bin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/command \
@@ -29,10 +38,12 @@ RUN bin/setup-goaws && install -m 755 tmp/tools/goaws /usr/local/bin/goaws
 FROM supervisor AS appliance
 COPY --from=build /usr/local/bundle /usr/local/bundle
 COPY . .
+COPY --from=assets /app/app/assets/builds /app/app/assets/builds
 COPY container/services/ /etc/s6-overlay/s6-rc.d/
 COPY container/user/ /etc/s6-overlay/user-bundles.d/user/contents.d/
 RUN chmod +x bin/* container/scripts/* /etc/s6-overlay/s6-rc.d/*/run \
     && mkdir -p /app/log /app/tmp && chown -R rubellum:rubellum /app/log /app/tmp
+RUN RAILS_ENV=development bundle exec rails assets:precompile
 VOLUME /data
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=60s --retries=3 \

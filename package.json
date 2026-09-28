@@ -1,0 +1,21 @@
+{
+  "name": "rubellum",
+  "private": true,
+  "scripts": {
+    "build": "esbuild app/javascript/application.js app/javascript/renderer.js --bundle --format=iife --target=es2022 --outdir=app/assets/builds --minify && tailwindcss -i app/assets/stylesheets/application.css -o app/assets/builds/application.css --minify"
+  },
+  "dependencies": {
+    "@hotwired/turbo-rails": "8.0.23",
+    "@hotwired/stimulus": "3.2.2",
+    "codemirror": "6.0.2",
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/lang-markdown": "6.5.2",
+    "@codemirror/legacy-modes": "6.5.4",
+    "d3": "7.9.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "@tailwindcss/cli": "4.3.3"
+  }
+}
