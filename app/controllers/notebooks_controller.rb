@@ -30,12 +30,7 @@ class NotebooksController < ApplicationController
   end
 
   def run_all
-    @notebook.with_lock do
-      @notebook.head_revision.ordered_revisions.select { |revision| revision.cell_type == "ruby" }.each do |revision|
-        ExecutionRequests.submit(notebook: @notebook, cell_id: revision.cell_id, expected_revision: revision.id,
-          inputs: NotebookData.new(@notebook).inputs, datasets: NotebookData.new(@notebook).datasets)
-      end
-    end
+    RunAll.call(@notebook)
     redirect_to app_notebook_path(@app, @notebook), status: :see_other
   end
 end

@@ -51,7 +51,8 @@ module Rubellum
       unless payload["source"].is_a?(String) && Message::UUID.match?(payload["cell_id"].to_s) &&
           Message::UUID.match?(payload["cell_revision_id"].to_s) &&
           payload["source_digest"] == Digest::SHA256.hexdigest(payload["source"]) &&
-          payload.fetch("inputs", {}).is_a?(Hash) && payload.fetch("datasets", {}).is_a?(Hash)
+          payload.fetch("inputs", {}).is_a?(Hash) && payload.fetch("datasets", {}).is_a?(Hash) &&
+          (payload["batch_id"].nil? || Message::UUID.match?(payload["batch_id"].to_s))
         raise ProtocolError, "invalid execution payload or source digest"
       end
       sequence = message["sequence"].to_s
@@ -138,6 +139,20 @@ module Rubellum
     def perform(envelope)
       @active_execution = envelope.fetch("execution_id")
       sequence = envelope.fetch("sequence").to_s
+      batch_id = envelope.dig("payload", "batch_id")
+      failed = batch_id && @journal.state.fetch("commands").values.find do |command|
+        command.dig("envelope", "payload", "batch_id") == batch_id &&
+          %w[execution_failed execution_interrupted execution_unknown execution_cancelled].include?(command["state"])
+      end
+      if failed
+        @journal.update(terminal: true) do |state|
+          state.fetch("commands").fetch(sequence)["state"] = "execution_cancelled"
+          state["next_command"] += 1
+          append_event(state, "execution_cancelled", { "message" => "Run all stopped after an earlier cell did not complete successfully", "batch_id" => batch_id }, @active_execution, envelope.fetch("message_id"))
+        end
+        publish_latest
+        return
+      end
       @journal.update do |state|
         state.fetch("commands").fetch(sequence)["state"] = "started"
         append_event(state, "execution_started", {}, @active_execution, envelope.fetch("message_id"))

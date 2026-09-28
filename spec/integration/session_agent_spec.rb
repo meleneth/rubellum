@@ -21,10 +21,10 @@ RSpec.describe "Real SQS Ruby execution" do
     end
   end
 
-  def command(source, sequence: 1)
+  def command(source, sequence: 1, batch_id: nil)
     build(:runner_message, **@scope.symbolize_keys, sequence:, payload: {
       "cell_id" => SecureRandom.uuid, "cell_revision_id" => SecureRandom.uuid,
-      "source" => source, "source_digest" => Digest::SHA256.hexdigest(source)
+      "source" => source, "source_digest" => Digest::SHA256.hexdigest(source), "batch_id" => batch_id
     })
   end
 
@@ -76,6 +76,23 @@ RSpec.describe "Real SQS Ruby execution" do
     @agent.step
     @agent.step
     expect(events.select { |event| event["kind"] == "execution_completed" }.map { |event| event["payload"]["inspection"] }).to eq(%w[21 42])
+  end
+
+  it "stops Run all after failure without executing later side effects, including after broker restart" do
+    batch_id = SecureRandom.uuid
+    @transport.publish(@queue, command('value = 10; raise "stop"', batch_id:))
+    @agent.step
+    @broker.stop
+    @broker.start
+    @agent.step
+    @queue = @transport.ensure_queue(Rubellum::QueueNames.session(@scope["session_id"], 1))
+    @transport.publish(@queue, command("value += 100", sequence: 2, batch_id:))
+    @agent.step
+    @transport.publish(@queue, command("value", sequence: 3))
+    @agent.step
+    results = events
+    expect(results.map { |event| event["kind"] }).to include("execution_failed", "execution_cancelled")
+    expect(results.select { |event| event["kind"] == "execution_completed" }.map { |event| event["payload"]["inspection"] }).to eq(["10"])
   end
 
   it "compacts only explicitly acknowledged durable event sequences" do

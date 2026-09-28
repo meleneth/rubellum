@@ -60,6 +60,13 @@ an incomplete checkpoint complete.
 
 ## Next concrete work
 
+- Run all now persists a shared immutable batch identity, captures one notebook/
+  input snapshot, and cancels remaining batch cells after failure/interruption.
+  Explicit later runs remain allowed; broker restart does not clear the failed
+  batch. `bin/test spec/unit/session_agent_spec.rb spec/models/run_all_spec.rb
+  spec/integration/session_agent_spec.rb`: 17 examples, 0 failures, including
+  verifying-double boundaries and real broker/evaluator failure recovery.
+
 - Expanded AMD64 image builds with Haml, local frontend assets and supervised
   workers. Appliance persistence/fatal-exit checks pass; the new real Chrome →
   Rails → SQS workers → Rails/Chrome execution and reset example passes separately

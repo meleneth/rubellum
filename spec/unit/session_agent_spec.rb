@@ -47,4 +47,26 @@ RSpec.describe Rubellum::SessionAgent do
     agent
     expect { described_class.new(scope:, transport:, journal: @journal, evaluator:) }.to raise_error(described_class::ProtocolError, /replacement/)
   end
+
+  it "cancels the rest of a failed batch without evaluating it, but permits an explicit new run" do
+    batch_id = SecureRandom.uuid
+    first = build(:runner_message, **scope.symbolize_keys, payload: payload.merge("batch_id" => batch_id))
+    second = build(:runner_message, **scope.symbolize_keys, sequence: 2, payload: payload.merge("batch_id" => batch_id))
+    third = build(:runner_message, **scope.symbolize_keys, sequence: 3, payload:)
+    allow(transport).to receive(:ensure_queue).and_return("queue")
+    allow(transport).to receive(:receive).and_return([])
+    allow(transport).to receive(:publish)
+    expect(evaluator).to receive(:execute).ordered.and_yield("execution_failed", { "message" => "failed" })
+    expect(evaluator).to receive(:execute).ordered.and_yield("execution_completed", { "inspection" => "42" })
+    [second, first, third].each { |message| agent.accept(message) }
+    3.times { agent.step }
+    expect(@journal.state.fetch("commands").values_at("1", "2", "3").map { |item| item["state"] })
+      .to eq(%w[execution_failed execution_cancelled execution_completed])
+    expect(@journal.state.fetch("events").count { |event| event["kind"] == "execution_started" }).to eq(2)
+  end
+
+  it "rejects a malformed batch identifier before acceptance" do
+    message = build(:runner_message, **scope.symbolize_keys, payload: payload.merge("batch_id" => "not-a-uuid"))
+    expect { agent.accept(message) }.to raise_error(described_class::ProtocolError)
+  end
 end
