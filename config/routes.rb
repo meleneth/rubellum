@@ -16,6 +16,7 @@ Rails.application.routes.draw do
         post :restore
         post :reset
         post :run_all
+        post :restart_all
       end
       resources :cells, only: [:create, :update, :destroy] do
         post :import_file, on: :collection

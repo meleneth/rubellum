@@ -39,4 +39,9 @@ class NotebooksController < ApplicationController
     RunAll.call(@notebook)
     redirect_to app_notebook_path(@app, @notebook), status: :see_other
   end
+
+  def restart_all
+    ExecutionRequests.restart_all(@notebook)
+    redirect_to app_notebook_path(@app, @notebook), status: :see_other
+  end
 end

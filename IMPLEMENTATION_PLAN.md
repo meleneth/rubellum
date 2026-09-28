@@ -45,13 +45,24 @@ an incomplete checkpoint complete.
    works through the public app and notebook history controls.
 2. Remaining lifecycle guarantees: heartbeat/hang detection, manager crash and
    descendant cleanup tests, durable control reconciliation, complete journal
-   pressure handling, and explicit Restart-and-run-all.
+   pressure handling. Explicit Restart-and-run-all now has public controls and
+   real broker-loss/fresh-context verification.
 3. Finish renderer lifecycle coverage and explicit dependency preparation. Portable
    app import/export/copy now works through the UI and CLI.
 4. Coordinated backup/restore into a fresh volume, full offline acceptance, and
    remaining public-path fixture journeys. ARM64 remains unverified.
 
 ## Latest verification
+
+- Public restart-and-run-all: full non-appliance suite 342 examples, 0 failures
+  (seed 1775); rebuilt AMD64 image `308a8c6fde14` passes all 3 appliance examples
+  (seed 22869), including browser restart-and-run-all into generation 3. Additional
+  startup-failure regression reproduced a permanently pending failed replacement;
+  the stopped fact now permits another explicit reset. Focused model/request
+  specs after that fix: 12 examples, 0 failures (seed 14331).
+- GitHub `origin` and internal `gitlab` remotes are configured. Both received
+  `main` at `518798f`; GitLab created `meleneth/rubellum` privately. Subsequent
+  completed slices are being published to both at the owner's request.
 
 - Durable restart batch core: model reset/run-all specs pass together (11
   examples, seed 35725). `bin/test spec/integration/restart_run_all_spec.rb

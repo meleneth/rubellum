@@ -106,6 +106,12 @@ RSpec.describe "Single-container appliance" do
     browser.click_button "▶ Run saved revision"
     expect(browser).to have_css(".return-value", text: "⇒ 1", wait: 20)
     expect(browser).to have_css(".output-meta", text: "generation 2")
+    browser.click_button "▶ Run saved revision"
+    expect(browser).to have_css(".return-value", text: "⇒ 2", wait: 20)
+    browser.click_button "Restart and run all"
+    expect(browser).to have_css(".status", text: "ready · generation 3", wait: 20)
+    expect(browser).to have_css(".return-value", text: "⇒ 1", wait: 20)
+    expect(browser).to have_css(".output-meta", text: "generation 3")
 
     # Exercise the documented package commands into a genuinely empty appliance.
     app_id = URI(browser.current_url).path.split("/")[2]

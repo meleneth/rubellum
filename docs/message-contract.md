@@ -18,8 +18,15 @@ Commands: `start`, `execute`, `interrupt`, `restart`, `stop`, `acknowledge`.
 
 Rails records a pending next generation atomically with each restart request.
 Ordinary execution and additional reset requests are rejected while it is pending.
-Old-generation ready/stopped facts cannot clear that pending state; only the
-replacement runner's durable ready fact advances the active generation.
+Old-generation ready/stopped facts cannot clear that pending state. The
+replacement runner's durable ready fact activates the new generation; a stopped
+fact for a replacement that failed before readiness leaves it lost and permits
+another explicit reset, without automatically replaying its queued work.
+Restart-and-run-all commits an immutable batch and execute outbox records for
+that next generation in the same transaction as the restart request. It does
+not send a separate start command for the replacement: the manager must retire
+the old context before creating it. New-generation readiness preserves the
+batch's reserved command sequence numbers; later runs follow those reservations.
 Facts: `runner_ready`, `runner_stopped`, `execution_accepted`, `execution_started`, `stdout`,
 `stderr`, `structured_output`, `display`, `output_truncated`, `artifact`, `execution_completed`,
 `execution_failed`, `execution_interrupted`, `execution_cancelled`,

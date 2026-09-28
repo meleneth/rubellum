@@ -43,4 +43,14 @@ RSpec.describe "Durable session reset", type: :model do
     expect { ExecutionRequests.reset(session) }.to change(OutboxMessage, :count).by(1)
     expect(session.reload.restart_generation).to eq(2)
   end
+
+  it "releases a failed replacement for an explicit new reset even if it never became ready" do
+    request = ExecutionRequests.reset(session)
+    EventIngestor.new.call(fact("runner_stopped", generation: 2, sequence: 1))
+    expect(session.reload).to have_attributes(status: "lost", generation: 2, restart_generation: nil)
+    expect(request.reload.confirmed_at).not_to be_nil
+    next_request = ExecutionRequests.reset(session)
+    expect(next_request.envelope).to include("kind" => "restart", "generation" => 2)
+    expect(session.reload.restart_generation).to eq(3)
+  end
 end

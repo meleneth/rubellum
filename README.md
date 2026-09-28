@@ -133,7 +133,11 @@ Switching modes preserves the editor and undo history.
 - **Run all saved Ruby** captures one document/input snapshot and queues Ruby in
   document order using the existing context. Failure or interruption cancels the
   rest of that batch; a later explicit run is still allowed. There is no inferred
-  dependency graph. A combined Restart-and-run-all action is not implemented.
+  dependency graph. **Restart and run all** captures the saved document/inputs
+  and runs that batch in a fresh context. Subsequent edits do not change the
+  captured batch. While reset is pending, additional run/reset requests are
+  rejected. With no existing session it uses the first fresh context; with no
+  Ruby cells it does nothing.
 - **Interrupt** uses a separate SQS control path. Unresponsive code is forcibly
   terminated after a grace period; an uncertain outcome is recorded honestly,
   never automatically retried. **Reset session** starts a fresh generation.

@@ -47,7 +47,13 @@ class EventIngestor
       end
       OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND envelope ->> 'kind' = 'start' AND (envelope ->> 'generation')::integer = ?", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)
     elsif kind == "runner_stopped"
-      session.update!(status: "lost") if current && !session.restart_generation
+      if session.restart_generation == envelope.fetch("generation")
+        session.update!(status: "lost", generation: session.restart_generation, restart_generation: nil,
+          next_command_sequence: session.executions.where(generation: envelope.fetch("generation")).maximum(:sequence).to_i + 1)
+        OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND envelope ->> 'kind' = 'restart' AND (envelope ->> 'generation')::integer < ?", session.id, session.generation).update_all(confirmed_at: Time.current)
+      elsif current && !session.restart_generation
+        session.update!(status: "lost")
+      end
       session.executions.where(generation: envelope.fetch("generation"), status: "running").update_all(status: "unknown")
       session.executions.where(generation: envelope.fetch("generation"), status: %w[queued accepted]).update_all(status: "cancelled")
       OutboxMessage.where(confirmed_at: nil).where("envelope ->> 'session_id' = ? AND (envelope ->> 'generation')::integer = ? AND envelope ->> 'kind' IN ('start', 'execute', 'interrupt')", session.id, envelope.fetch("generation")).update_all(confirmed_at: Time.current)

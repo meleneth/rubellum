@@ -26,6 +26,7 @@
       .flex.flex-wrap.gap-2.items-center.mt-5
         - unless @historical
           = button_to "Run all saved Ruby", run_all_app_notebook_path(@app, @notebook), class: "primary-button edit-control"
+          = button_to "Restart and run all", restart_all_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
           - if @session
             = button_to "Reset session", reset_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
         = link_to "History", history_app_notebook_path(@app, @notebook), class: "quiet-button edit-control"
