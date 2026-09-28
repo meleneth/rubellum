@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "digest"
+require "fileutils"
+require "tmpdir"
+require "rbconfig"
+
+version = "0.5.4"
+architectures = {
+  "x86_64" => ["x86_64", "091a09d0433b98e4786e5d0c5dd04c0328fba436070b3c24b3b133c217d2ba5c"],
+  "aarch64" => ["arm64", "a24383485deaa80a4c6334eb73fd55293cc3c6f8b65a903d5e7f5c807f1d0b49"]
+}.freeze
+abort "This installer supports Linux only; set GOAWS_BIN for another platform" unless RUBY_PLATFORM.include?("linux")
+arch, digest = architectures.fetch(RbConfig::CONFIG.fetch("host_cpu")) do
+  abort "Unsupported GoAWS platform; set GOAWS_BIN to a GoAWS #{version} binary"
+end
+
+destination = File.expand_path("../tmp/tools", __dir__)
+FileUtils.mkdir_p(destination)
+Dir.mktmpdir("download-", destination) do |directory|
+  archive = File.join(directory, "goaws.tar.gz")
+  url = "https://github.com/Admiral-Piett/goaws/releases/download/v#{version}/goaws_Linux_#{arch}.tar.gz"
+  abort "GoAWS download failed" unless system("curl", "-fsSL", "--retry", "3", url, "-o", archive)
+  abort "GoAWS checksum mismatch" unless Digest::SHA256.file(archive).hexdigest == digest
+  abort "GoAWS extraction failed" unless system("tar", "-xzf", archive, "-C", directory, "goaws")
+  File.rename(File.join(directory, "goaws"), File.join(destination, "goaws"))
+end
+puts "Installed checksum-verified GoAWS #{version} to #{destination}/goaws"

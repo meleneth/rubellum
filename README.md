@@ -20,5 +20,17 @@ bin/test spec/unit
 Tests use RSpec with verifying doubles and FactoryBot. Unit tests require no database, broker,
 or Rails boot. SimpleCov writes line/branch coverage to `coverage/`.
 
+Install the pinned, checksum-verified GoAWS release and run the real broker
+contracts (requires local sockets and subprocesses):
+
+```sh
+bin/setup-goaws
+bin/test spec/unit spec/integration
+```
+
+`bin/setup-goaws` supports Linux AMD64 and ARM64. AMD64 is verified; ARM64 is
+not yet tested. Alternatively set `GOAWS_BIN` to a GoAWS 0.5.4 executable.
+Integration examples start and stop their own broker with temporary storage.
+
 There is not yet a runnable appliance. Build/run commands will be added with the
 working slices that implement them.

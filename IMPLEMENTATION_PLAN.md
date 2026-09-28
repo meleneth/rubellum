@@ -34,8 +34,9 @@ an incomplete checkpoint complete.
   `b4ae31b` on 2026-09-28.
 - Host: AMD64, Ruby 4.0.6, Bundler 4.0.16, Node 24.21.0, Docker available.
 - No unresolved product decision blocks the first checkpoint.
-- Pinned Ruby 4.0.6, Rails 8.1.4 (declares Ruby >= 3.2), AWS SDK SQS 1.119.0.
-  Real SDK/broker interoperability and Rails boot remain to be verified.
+- Pinned Ruby 4.0.6, Rails 8.1.4 (declares Ruby >= 3.2), AWS SDK SQS 1.119.0,
+  GoAWS 0.5.4. Real SDK/broker interoperability is verified; Rails boot remains
+  to be verified.
 
 ## Verification ledger
 
@@ -48,3 +49,19 @@ an incomplete checkpoint complete.
   prove transport, durability, execution, or application acceptance behavior.
 - 2026-09-28: added FactoryBot for reusable data and factory/trait linting using
   the build strategy; `bin/test spec/unit`: 67 examples, 0 failures.
+- 2026-09-28: `bin/test spec/unit spec/integration/goaws_spec.rb`: 92 examples,
+  0 failures (87 unit, 5 real broker). Verified JSON protocol, idempotent queue
+  creation, 64 KiB envelopes, receipt deletion, visibility redelivery, duplicate
+  application IDs, lost topology/messages after broker restart, recreation and
+  explicit republication. Corrected GoAWS region-prefixed loopback URLs and
+  protected that behavior with a regression assertion. Actual coverage: 100%
+  lines, 93.75% branches for the current small library. This does not yet prove
+  durable reconciliation, generation fencing, or a Ruby execution round trip.
+
+## Next concrete work
+
+Continue checkpoint 1 with PostgreSQL/s6 appliance boot and the smallest Ruby
+execution/result path, using the verified SDK and broker configuration. Keep
+durable acceptance, clean evaluator exec, and explicit process ownership in scope
+as the execution path develops. Do not interpret the transport tests as proof of
+the reliability requirements or any complete application acceptance criterion.
